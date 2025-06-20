@@ -656,16 +656,25 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                     task.wait(0.3)
                                     break
                                 else
-                                    -- 不重置模式 - 鎖定在當前位置
+                                    -- 不重置模式 - 每0.5秒移動到目標玩家前方5單位
                                     isMovingLocked = true
-                                    local lockedPosition = humanoidRootPart.Position
                                     
-                                    -- 持續鎖定位置直到功能關閉
+                                    -- 持續跟隨目標玩家直到功能關閉
                                     while isHelpModeEnabled and isMovingLocked do
-                                        if humanoidRootPart and humanoidRootPart.Parent then
-                                            humanoidRootPart.Position = lockedPosition
-                                        end
-                                        task.wait(0.1)
+                                        pcall(function()
+                                            if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                                local targetRoot = targetPlayer.Character.HumanoidRootPart
+                                                local targetPos = targetRoot.Position
+                                                local targetLookDirection = targetRoot.CFrame.LookVector
+                                                
+                                                local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                                                
+                                                if humanoidRootPart and humanoidRootPart.Parent then
+                                                    humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                                                end
+                                            end
+                                        end)
+                                        task.wait(0.5)
                                     end
                                     break
                                 end
@@ -713,9 +722,7 @@ end)
 
 -- 修改現有的分區切換邏輯，添加屏障分區
 Section5.MouseButton1Click:Connect(function()
-    barrierSection.Visible = false
-    
-    -- 顯示屏障分區
+    -- 直接顯示屏障分區，不需要先隱藏
     barrierSection.Visible = true
 end)
 
