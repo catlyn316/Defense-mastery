@@ -72,7 +72,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -80, 0, 50)
 Title.Position = UDim2.new(0, 15, 0, 0)  -- 往上移動5像素原為5
 Title.BackgroundTransparency = 1
-Title.Text = "✨ 貓玲的腳本區 ✨"
+Title.Text = "✨ 貓玲的腳本區 ✨v0.1"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -290,7 +290,7 @@ barrierSection.Size = UDim2.new(1, 0, 1, 0)
 barrierSection.CanvasSize = UDim2.new(0, 0, 0, 500)
 barrierSection.ScrollBarThickness = 6
 barrierSection.BackgroundTransparency = 1
-barrierSection.Visible = false
+barrierSection.Visible = true
 barrierSection.AutomaticCanvasSize = Enum.AutomaticSize.Y
 barrierSection.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
 barrierSection.ScrollingDirection = Enum.ScrollingDirection.Y
@@ -467,7 +467,7 @@ autoAbilityBtn.MouseButton1Click:Connect(function()
     autoAbilityBtn.Text = isBarrierEnabled and "自動使用能力: 開" or "自動使用能力: 關"
     
     if isBarrierEnabled then
-        -- 如果是自訂位置模式，記錄當前位置
+        -- 如果是自訂位置模式，記錄按下按鈕時的位置
         if barrierMode == "自訂位置" then
             local character = LocalPlayer.Character
             if character and character:FindFirstChild("HumanoidRootPart") then
@@ -478,8 +478,8 @@ autoAbilityBtn.MouseButton1Click:Connect(function()
         
         barrierLoop = task.spawn(function()
             while isBarrierEnabled do
+                -- 執行屏障能力
                 pcall(function()
-                    -- 執行屏障能力
                     local args = {
                         [1] = 1
                     }
@@ -489,32 +489,32 @@ autoAbilityBtn.MouseButton1Click:Connect(function()
                 -- 等待25秒
                 task.wait(25)
                 
-                if isBarrierEnabled then
-                    if barrierMode == "自訂位置" and savedPosition and savedCFrame then
-                        -- 移動到記錄的位置
-                        local character = LocalPlayer.Character
+                if isBarrierEnabled and barrierMode == "自訂位置" and savedPosition and savedCFrame then
+                    -- 記錄當前位置和面對方向
+                    local character = LocalPlayer.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local currentPosition = character.HumanoidRootPart.Position
+                        local currentCFrame = character.HumanoidRootPart.CFrame
+                        
+                        -- 移動到按下按鈕時記錄的位置
+                        character.HumanoidRootPart.CFrame = savedCFrame
+                        
+                        -- 在記錄位置執行屏障能力
+                        pcall(function()
+                            local args = {
+                                [1] = 1
+                            }
+                            game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args))
+                        end)
+                        
+                        -- 等待0.1秒後回到當前位置
+                        task.wait(0.1)
                         if character and character:FindFirstChild("HumanoidRootPart") then
-                            local originalPos = character.HumanoidRootPart.Position
-                            local originalCFrame = character.HumanoidRootPart.CFrame
-                            
-                            -- 移動到記錄位置
-                            character.HumanoidRootPart.CFrame = CFrame.new(savedPosition)
-                            
-                            -- 再次執行屏障能力
-                            pcall(function()
-                                local args = {
-                                    [1] = 1
-                                }
-                                game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args))
-                            end)
-                            
-                            -- 等待0.1秒後回到原位
-                            task.wait(0.1)
-                            if character and character:FindFirstChild("HumanoidRootPart") then
-                                character.HumanoidRootPart.CFrame = originalCFrame
-                            end
+                            character.HumanoidRootPart.CFrame = currentCFrame
                         end
                     end
+                elseif isBarrierEnabled and barrierMode == "普通" then
+                    -- 普通模式不需要額外操作
                 end
             end
         end)
@@ -551,7 +551,7 @@ autoAttackBtn.MouseButton1Click:Connect(function()
                         end
                     end
                 end
-                task.wait(0.1) -- 短暫等待避免過度頻繁攻擊
+                task.wait(0.5) -- 短暫等待避免過度頻繁攻擊
             end
         end)
     elseif autoAttackLoop then
