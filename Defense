@@ -580,11 +580,13 @@ helpModeBtn.MouseButton1Click:Connect(function()
                 end
                 
                 pcall(function()
-                    -- 傳送到 Lobby.Teleport1
-                    local teleport1 = Workspace.Lobby:FindFirstChild("Teleport1")
-                    if teleport1 and isHelpModeEnabled then
-                        humanoidRootPart.CFrame = teleport1.CFrame
-                        task.wait(0.3)
+                    -- 只有在非滑行模式下才傳送到 Lobby.Teleport1
+                    if helpMode ~= "被打後滑行" then
+                        local teleport1 = Workspace.Lobby:FindFirstChild("Teleport1")
+                        if teleport1 and isHelpModeEnabled then
+                            humanoidRootPart.CFrame = teleport1.CFrame
+                            task.wait(0.3)
+                        end
                     end
                     
                     -- 持續跟隨目標玩家
@@ -592,6 +594,22 @@ helpModeBtn.MouseButton1Click:Connect(function()
                     if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and isHelpModeEnabled then
                         local playerWorkspaceFolder = Workspace:FindFirstChild(LocalPlayer.Name)
                         local lastUpdateTime = tick()
+                        
+                        -- 滑行模式：直接移動到目標前方
+                        if helpMode == "被打後滑行" then
+                            -- 直接移動到目標玩家前方5單位
+                            pcall(function()
+                                local targetRoot = targetPlayer.Character.HumanoidRootPart
+                                local targetPos = targetRoot.Position
+                                local targetLookDirection = targetRoot.CFrame.LookVector
+                                
+                                local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                                
+                                if humanoidRootPart and humanoidRootPart.Parent then
+                                    humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                                end
+                            end)
+                        end
                         
                         -- 持續移動直到檢測到LastSlappedBy
                         while isHelpModeEnabled and character.Parent and humanoid.Health > 0 and playerWorkspaceFolder do
@@ -642,7 +660,7 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                     task.wait(0.3)
                                     break
                                 elseif helpMode == "被打後滑行" then
-                                    -- 新的滑行模式
+                                    -- 新的滑行模式：直接滑行到dedBarrier
                                     if slideToBarrier(targetName) then
                                         -- 等待滑行完成
                                         while isSliding and isHelpModeEnabled do
@@ -675,28 +693,34 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                 end
                             end
                             
-                            local currentTime = tick()
-                            if currentTime - lastUpdateTime < 0.2 then
-                                task.wait(0.1)
-                                continue
-                            end
-                            lastUpdateTime = currentTime
-                            
-                            if not (targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-                                break
-                            end
-                            
-                            pcall(function()
-                                local targetRoot = targetPlayer.Character.HumanoidRootPart
-                                local targetPos = targetRoot.Position
-                                local targetLookDirection = targetRoot.CFrame.LookVector
-                                
-                                local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-                                
-                                if (humanoidRootPart.Position - newPos).Magnitude > 1 then
-                                    humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                            -- 非滑行模式才需要持續跟隨
+                            if helpMode ~= "被打後滑行" then
+                                local currentTime = tick()
+                                if currentTime - lastUpdateTime < 0.2 then
+                                    task.wait(0.1)
+                                    continue
                                 end
-                            end)
+                                lastUpdateTime = currentTime
+                                
+                                if not (targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+                                    break
+                                end
+                                
+                                pcall(function()
+                                    local targetRoot = targetPlayer.Character.HumanoidRootPart
+                                    local targetPos = targetRoot.Position
+                                    local targetLookDirection = targetRoot.CFrame.LookVector
+                                    
+                                    local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                                    
+                                    if (humanoidRootPart.Position - newPos).Magnitude > 1 then
+                                        humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                                    end
+                                end)
+                            else
+                                -- 滑行模式：等待被打中
+                                task.wait(0.1)
+                            end
                             
                             task.wait(0.1)
                         end
