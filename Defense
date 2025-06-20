@@ -2,80 +2,9 @@
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
-local TweenService = game:GetService("TweenService")
 
 -- 儲存自定義名稱
-local savedName = "catlyn"
-
--- 全域變數
-local isAutoAbilityEnabled = false
-local autoAbilityLoop = nil
-local isAutoAttackEnabled = false
-local autoAttackLoop = nil
-local isHelpModeEnabled = false
-local helpModeLoop = nil
-local currentAbilityMode = "普通"
-
--- 自訂位置變數
-local customStartPosition = nil
-local customStartCFrame = nil
-local customEndPosition = nil
-local customEndCFrame = nil
-
--- 尋找25單位內的玩家
-local function findPlayerWithin25Units()
-    local localCharacter = LocalPlayer.Character
-    
-    if not localCharacter or not localCharacter:FindFirstChild("HumanoidRootPart") then
-        return nil
-    end
-    
-    local localPosition = localCharacter.HumanoidRootPart.Position
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local distance = (player.Character.HumanoidRootPart.Position - localPosition).Magnitude
-            if distance <= 25 then
-                return player
-            end
-        end
-    end
-    
-    return nil
-end
-
--- 尋找10單位內的玩家
-local function findPlayerWithin10Units()
-    local localCharacter = LocalPlayer.Character
-    
-    if not localCharacter or not localCharacter:FindFirstChild("HumanoidRootPart") then
-        return nil
-    end
-    
-    local localPosition = localCharacter.HumanoidRootPart.Position
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local distance = (player.Character.HumanoidRootPart.Position - localPosition).Magnitude
-            if distance <= 10 then
-                return player
-            end
-        end
-    end
-    
-    return nil
-end
-
--- 檢查玩家是否處於ragdoll狀態
-local function isPlayerRagdolled(player)
-    if not player.Character then return false end
-    
-    local humanoid = player.Character:FindFirstChild("Humanoid")
-    if not humanoid then return false end
-    
-    -- 檢查PlatformStand狀態（通常用於ragdoll）
-    return humanoid.PlatformStand == true
-end
+local savedName = "catlyn" -- 修正：移除了 text 變數
 
 -- 修改名稱標籤的函數
 local function changeNametag()
@@ -103,16 +32,17 @@ changeNametag()
 
 -- 監聽角色重生事件，重生後重新應用名稱
 LocalPlayer.CharacterAdded:Connect(function(character)
+    -- 等待角色完全載入
     character:WaitForChild("Head", 10)
-    wait(0.5)
+    wait(0.5) -- 等待名稱標籤系統初始化
     changeNametag()
 end)
 
 -- GUI 主體
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "BarrierHub"
+ScreenGui.Name = "MaolingHub"
 
--- 主框架樣式
+-- 修正：主框架樣式
 local Frame = Instance.new("Frame", ScreenGui)
 Frame.Size = UDim2.new(0, 450, 0, 350)
 Frame.Position = UDim2.new(0.5, -225, 0.5, -175)
@@ -137,12 +67,12 @@ stroke.Transparency = 0.5
 
 Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 15)
 
--- 標題樣式
+-- 修正：標題樣式
 local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -80, 0, 50)
-Title.Position = UDim2.new(0, 15, 0, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)  -- 往上移動5像素原為5
 Title.BackgroundTransparency = 1
-Title.Text = "🔰 屏障 🔰"
+Title.Text = "✨ 貓玲的腳本區 ✨"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -154,7 +84,7 @@ titleStroke.Color = Color3.fromRGB(100, 150, 255)
 titleStroke.Thickness = 1
 titleStroke.Transparency = 0.3
 
--- 關閉按鈕樣式和功能
+-- 修正：關閉按鈕樣式和功能
 local Close = Instance.new("TextButton", Frame)
 Close.Size = UDim2.new(0, 35, 0, 35)
 Close.Position = UDim2.new(1, -40, 0, 8)
@@ -174,13 +104,13 @@ closeGradient.Color = ColorSequence.new{
 
 Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 8)
 
--- 關閉按鈕功能
+-- 修正：關閉按鈕功能
 Close.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
-    _G.barrierHubLoaded = false
+    _G.maolingHubLoaded = false -- 重置載入狀態
 end)
 
--- 最小化按鈕樣式
+-- 修正：最小化按鈕樣式
 local Minimize = Instance.new("TextButton", Frame)
 Minimize.Size = UDim2.new(0, 35, 0, 35)
 Minimize.Position = UDim2.new(1, -80, 0, 8)
@@ -199,7 +129,7 @@ minimizeGradient.Color = ColorSequence.new{
 
 Instance.new("UICorner", Minimize).CornerRadius = UDim.new(0, 8)
 
--- 側邊欄為可滾動
+-- 修正：側邊欄為可滾動
 local SideBar = Instance.new("ScrollingFrame", Frame)
 SideBar.Size = UDim2.new(0, 130, 1, -55)
 SideBar.Position = UDim2.new(0, 5, 0, 50)
@@ -224,7 +154,7 @@ local sidebarLayout = Instance.new("UIListLayout", SideBar)
 sidebarLayout.Padding = UDim.new(0, 8)
 sidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
--- 內容區域
+-- 修正：內容區域
 local Content = Instance.new("Frame", Frame)
 Content.Size = UDim2.new(1, -145, 1, -55)
 Content.Position = UDim2.new(0, 140, 0, 50)
@@ -239,7 +169,7 @@ contentGradient.Color = ColorSequence.new{
 
 Instance.new("UICorner", Content).CornerRadius = UDim.new(0, 10)
 
--- 縮小功能
+-- 修正：縮小功能的尺寸
 local isMinimized = false
 local fullSize = UDim2.new(0, 450, 0, 350)
 local miniSize = UDim2.new(0, 450, 0, 50)
@@ -251,27 +181,35 @@ Minimize.MouseButton1Click:Connect(function()
     Frame.Size = isMinimized and miniSize or fullSize
 end)
 
--- 創建分區按鈕的函數
+-- 修正：簡單高亮文字的分區按鈕樣式
 local function createSectionButton(text, order, parent)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(0, 120, 0, 45)
     btn.Text = text
-    btn.BackgroundColor3 = Color3.fromRGB(85, 85, 105)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextTransparency = 0
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 16
+    btn.BackgroundColor3 = Color3.fromRGB(85, 85, 105)  -- 比原本更亮的背景
+    
+    -- 最亮的文字設定
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- 純白色
+    btn.TextTransparency = 0  -- 完全不透明
+    btn.Font = Enum.Font.GothamBold  -- 粗體字
+    btn.TextSize = 16  -- 適中大小
     btn.BorderSizePixel = 0
     
+    -- 移除漸層，使用純色背景
+    -- 這樣文字會更清楚
+    
+    -- 添加圓角
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
     
+    -- 簡化描邊
     local btnStroke = Instance.new("UIStroke", btn)
     btnStroke.Color = Color3.fromRGB(150, 180, 255)
     btnStroke.Thickness = 1
     btnStroke.Transparency = 0.6
     
+    -- 簡單hover效果
     btn.MouseEnter:Connect(function()
-        btn.BackgroundColor3 = Color3.fromRGB(105, 105, 125)
+        btn.BackgroundColor3 = Color3.fromRGB(105, 105, 125)  -- hover時更亮
         btnStroke.Transparency = 0.3
     end)
     
@@ -283,276 +221,306 @@ local function createSectionButton(text, order, parent)
     return btn
 end
 
--- 創建唯一分區按鈕
-local Section1 = createSectionButton("🔰", 1, SideBar)
 
--- 主要內容區域
-local MainScroll = Instance.new("ScrollingFrame", Content)
-MainScroll.Size = UDim2.new(1, 0, 1, 0)
-MainScroll.CanvasSize = UDim2.new(0, 0, 0, 300)
-MainScroll.ScrollBarThickness = 6
-MainScroll.BackgroundTransparency = 1
-MainScroll.Visible = true
-MainScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-MainScroll.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
-MainScroll.ScrollingDirection = Enum.ScrollingDirection.Y
-
--- 自動使用能力下拉選單按鈕
-local autoAbilityDropdownBtn = Instance.new("TextButton", MainScroll)
-autoAbilityDropdownBtn.Size = UDim2.new(0, 180, 0, 35)
-autoAbilityDropdownBtn.Position = UDim2.new(0.5, -90, 0, 10)
-autoAbilityDropdownBtn.Text = "普通 ▼"
-autoAbilityDropdownBtn.BackgroundColor3 = Color3.fromRGB(80, 140, 220)
-autoAbilityDropdownBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoAbilityDropdownBtn.TextSize = 16
-autoAbilityDropdownBtn.Font = Enum.Font.GothamBold
-autoAbilityDropdownBtn.BorderSizePixel = 0
-
-Instance.new("UICorner", autoAbilityDropdownBtn).CornerRadius = UDim.new(0, 8)
-
-local autoAbilityDropdownStroke = Instance.new("UIStroke", autoAbilityDropdownBtn)
-autoAbilityDropdownStroke.Color = Color3.fromRGB(120, 170, 255)
-autoAbilityDropdownStroke.Thickness = 1
-autoAbilityDropdownStroke.Transparency = 0.6
-
--- 自動使用能力下拉菜單
-local autoAbilityDropdownMenu = Instance.new("Frame", MainScroll)
-autoAbilityDropdownMenu.Size = UDim2.new(0, 180, 0, 70)
-autoAbilityDropdownMenu.Position = UDim2.new(0.5, -90, 0, 45)
-autoAbilityDropdownMenu.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-autoAbilityDropdownMenu.BorderSizePixel = 0
-autoAbilityDropdownMenu.Visible = false
-
-Instance.new("UICorner", autoAbilityDropdownMenu).CornerRadius = UDim.new(0, 8)
-
-local autoAbilityMenuStroke = Instance.new("UIStroke", autoAbilityDropdownMenu)
-autoAbilityMenuStroke.Color = Color3.fromRGB(120, 170, 255)
-autoAbilityMenuStroke.Thickness = 1
-autoAbilityMenuStroke.Transparency = 0.6
-
--- 自動使用能力下拉選項1
-local autoAbilityOption1 = Instance.new("TextButton", autoAbilityDropdownMenu)
-autoAbilityOption1.Size = UDim2.new(1, 0, 0, 35)
-autoAbilityOption1.Position = UDim2.new(0, 0, 0, 0)
-autoAbilityOption1.Text = "普通"
-autoAbilityOption1.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-autoAbilityOption1.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoAbilityOption1.TextSize = 14
-autoAbilityOption1.Font = Enum.Font.Gotham
-autoAbilityOption1.BorderSizePixel = 0
-
--- 自動使用能力下拉選項2
-local autoAbilityOption2 = Instance.new("TextButton", autoAbilityDropdownMenu)
-autoAbilityOption2.Size = UDim2.new(1, 0, 0, 35)
-autoAbilityOption2.Position = UDim2.new(0, 0, 0, 35)
-autoAbilityOption2.Text = "自訂位置"
-autoAbilityOption2.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-autoAbilityOption2.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoAbilityOption2.TextSize = 14
-autoAbilityOption2.Font = Enum.Font.Gotham
-autoAbilityOption2.BorderSizePixel = 0
-
--- 自動使用能力開關按鈕
-local autoAbilityBtn = Instance.new("TextButton", MainScroll)
-autoAbilityBtn.Size = UDim2.new(0, 180, 0, 35)
-autoAbilityBtn.Position = UDim2.new(0.5, -90, 0, 55)
-autoAbilityBtn.Text = "自動使用能力: 關"
-autoAbilityBtn.BackgroundColor3 = Color3.fromRGB(80, 140, 220)
-autoAbilityBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoAbilityBtn.TextSize = 16
-autoAbilityBtn.Font = Enum.Font.GothamBold
-autoAbilityBtn.BorderSizePixel = 0
-
-Instance.new("UICorner", autoAbilityBtn).CornerRadius = UDim.new(0, 8)
-
-local abilityBtnStroke = Instance.new("UIStroke", autoAbilityBtn)
-abilityBtnStroke.Color = Color3.fromRGB(120, 170, 255)
-abilityBtnStroke.Thickness = 1
-abilityBtnStroke.Transparency = 0.6
-
--- 自動攻擊按鈕
-local autoAttackBtn = Instance.new("TextButton", MainScroll)
-autoAttackBtn.Size = UDim2.new(0, 180, 0, 35)
-autoAttackBtn.Position = UDim2.new(0.5, -90, 0, 100)
-autoAttackBtn.Text = "自動攻擊: 關"
-autoAttackBtn.BackgroundColor3 = Color3.fromRGB(80, 140, 220)
-autoAttackBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoAttackBtn.TextSize = 16
-autoAttackBtn.Font = Enum.Font.GothamBold
-autoAttackBtn.BorderSizePixel = 0
-
-Instance.new("UICorner", autoAttackBtn).CornerRadius = UDim.new(0, 8)
-
-local attackBtnStroke = Instance.new("UIStroke", autoAttackBtn)
-attackBtnStroke.Color = Color3.fromRGB(120, 170, 255)
-attackBtnStroke.Thickness = 1
-attackBtnStroke.Transparency = 0.6
-
--- 輸入框
-local playerInput = Instance.new("TextBox", MainScroll)
-playerInput.Size = UDim2.new(0, 180, 0, 35)
-playerInput.Position = UDim2.new(0.5, -90, 0, 145)
-playerInput.PlaceholderText = "輸入玩家名稱"
-playerInput.Text = ""
-playerInput.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-playerInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-playerInput.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
-playerInput.TextSize = 14
-playerInput.Font = Enum.Font.Gotham
-playerInput.BorderSizePixel = 0
-
-Instance.new("UICorner", playerInput).CornerRadius = UDim.new(0, 8)
-
-local inputStroke = Instance.new("UIStroke", playerInput)
-inputStroke.Color = Color3.fromRGB(120, 170, 255)
-inputStroke.Thickness = 1
-inputStroke.Transparency = 0.6
-
--- 幫助模式按鈕
-local helpModeBtn = Instance.new("TextButton", MainScroll)
-helpModeBtn.Size = UDim2.new(0, 180, 0, 35)
-helpModeBtn.Position = UDim2.new(0.5, -90, 0, 190)
-helpModeBtn.Text = "幫助模式: 關"
-helpModeBtn.BackgroundColor3 = Color3.fromRGB(80, 140, 220)
-helpModeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-helpModeBtn.TextSize = 16
-helpModeBtn.Font = Enum.Font.GothamBold
-helpModeBtn.BorderSizePixel = 0
-
-Instance.new("UICorner", helpModeBtn).CornerRadius = UDim.new(0, 8)
-
-local helpBtnStroke = Instance.new("UIStroke", helpModeBtn)
-helpBtnStroke.Color = Color3.fromRGB(120, 170, 255)
-helpBtnStroke.Thickness = 1
-helpBtnStroke.Transparency = 0.6
-
--- 創建補間動畫函數
-local function animateButtonPosition(button, targetPosition, duration)
-    local tweenInfo = TweenInfo.new(
-        duration or 0.3,
-        Enum.EasingStyle.Quart,
-        Enum.EasingDirection.Out
-    )
-    local tween = TweenService:Create(button, tweenInfo, {Position = targetPosition})
-    tween:Play()
-    return tween
+-- 修正：簡單高亮文字的一般按鈕樣式
+local function createButton(text, order, parent, spacing)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0, 180, 0, 35)
+    btn.Position = UDim2.new(0.5, -90, 0, 10 + (order - 1) * spacing)
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(80, 140, 220)  -- 比原本更亮的背景
+    
+    -- 最亮的文字設定
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- 純白色
+    btn.TextSize = 16  -- 適中大小
+    btn.Font = Enum.Font.GothamBold  -- 粗體字
+    btn.BorderSizePixel = 0
+    
+    -- 移除漸層，使用純色背景讓文字更清楚
+    
+    -- 添加圓角
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    
+    -- 簡化描邊
+    local btnStroke = Instance.new("UIStroke", btn)
+    btnStroke.Color = Color3.fromRGB(120, 170, 255)
+    btnStroke.Thickness = 1
+    btnStroke.Transparency = 0.6
+    
+    -- 簡單hover效果
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(100, 160, 240)  -- hover時更亮
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- 保持純白
+        btnStroke.Transparency = 0.3
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(80, 140, 220)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- 保持純白
+        btnStroke.Transparency = 0.6
+    end)
+    
+    return btn
 end
 
--- 自動使用能力下拉選單功能
-autoAbilityDropdownBtn.MouseButton1Click:Connect(function()
-    -- 关闭帮助模式下拉选单
-    if helpModeDropdownMenu.Visible then
-        helpModeDropdownMenu.Visible = false
-        animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 280))
-    end
+
+-- 添加滾動框樣式改善
+local function styleScrollFrame(scrollFrame)
+    scrollFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+    scrollFrame.BorderSizePixel = 0
+    scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
     
-    autoAbilityDropdownMenu.Visible = not autoAbilityDropdownMenu.Visible
+    local scrollGradient = Instance.new("UIGradient", scrollFrame)
+    scrollGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 65)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(55, 55, 80))
+    }
     
-    if autoAbilityDropdownMenu.Visible then
-        -- 選單展開時，將其他按鈕向下移動
-        animateButtonPosition(autoAbilityBtn, UDim2.new(0.5, -90, 0, 125))
-        animateButtonPosition(autoAttackBtn, UDim2.new(0.5, -90, 0, 170))
-        animateButtonPosition(playerInput, UDim2.new(0.5, -90, 0, 215))
-        animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 260))
-    else
-        -- 選單關閉時，將其他按鈕移回原位
-        animateButtonPosition(autoAbilityBtn, UDim2.new(0.5, -90, 0, 55))
-        animateButtonPosition(autoAttackBtn, UDim2.new(0.5, -90, 0, 100))
-        animateButtonPosition(playerInput, UDim2.new(0.5, -90, 0, 145))
-        animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 190))
-    end
+    Instance.new("UICorner", scrollFrame).CornerRadius = UDim.new(0, 8)
+end
+
+-- 屏障分區腳本 - 添加到現有GUI中
+
+-- 在現有的分區按鈕創建後添加屏障分區
+local Section5 = createSectionButton("屏障", 1, SideBar)
+
+-- 創建屏障分區的ScrollingFrame
+local barrierSection = Instance.new("ScrollingFrame", Content)
+barrierSection.Size = UDim2.new(1, 0, 1, 0)
+barrierSection.CanvasSize = UDim2.new(0, 0, 0, 500)
+barrierSection.ScrollBarThickness = 6
+barrierSection.BackgroundTransparency = 1
+barrierSection.Visible = false
+barrierSection.AutomaticCanvasSize = Enum.AutomaticSize.Y
+barrierSection.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+barrierSection.ScrollingDirection = Enum.ScrollingDirection.Y
+
+-- 應用滾動框樣式
+styleScrollFrame(barrierSection)
+
+-- 屏障功能變數
+local isBarrierEnabled = false
+local barrierLoop = nil
+local barrierMode = "普通" -- 預設模式
+local savedPosition = nil
+local savedCFrame = nil
+local isAutoAttackEnabled = false
+local autoAttackLoop = nil
+local isHelpModeEnabled = false
+local helpModeLoop = nil
+local helpMode = "被打後重置" -- 預設模式
+local playerInput = nil
+local isMovingLocked = false
+
+-- 創建自動使用能力按鈕
+local autoAbilityBtn = createButton("自動使用能力: 關", 1, barrierSection, 50)
+
+-- 創建模式下拉選單 (自動使用能力)
+local modeDropdown = Instance.new("TextButton", barrierSection)
+modeDropdown.Size = UDim2.new(0, 180, 0, 25)
+modeDropdown.Position = UDim2.new(0.5, -90, 0, 55)
+modeDropdown.Text = "模式: " .. barrierMode
+modeDropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+modeDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+modeDropdown.TextSize = 14
+modeDropdown.Font = Enum.Font.Gotham
+modeDropdown.BorderSizePixel = 0
+Instance.new("UICorner", modeDropdown).CornerRadius = UDim.new(0, 6)
+
+-- 模式選項框架
+local modeOptions = Instance.new("Frame", barrierSection)
+modeOptions.Size = UDim2.new(0, 180, 0, 60)
+modeOptions.Position = UDim2.new(0.5, -90, 0, 80)
+modeOptions.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+modeOptions.BorderSizePixel = 0
+modeOptions.Visible = false
+Instance.new("UICorner", modeOptions).CornerRadius = UDim.new(0, 6)
+
+-- 普通模式選項
+local normalOption = Instance.new("TextButton", modeOptions)
+normalOption.Size = UDim2.new(1, 0, 0.5, 0)
+normalOption.Position = UDim2.new(0, 0, 0, 0)
+normalOption.Text = "普通"
+normalOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+normalOption.TextColor3 = Color3.fromRGB(255, 255, 255)
+normalOption.TextSize = 12
+normalOption.Font = Enum.Font.Gotham
+normalOption.BorderSizePixel = 0
+
+-- 自訂位置模式選項
+local customOption = Instance.new("TextButton", modeOptions)
+customOption.Size = UDim2.new(1, 0, 0.5, 0)
+customOption.Position = UDim2.new(0, 0, 0.5, 0)
+customOption.Text = "自訂位置"
+customOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+customOption.TextColor3 = Color3.fromRGB(255, 255, 255)
+customOption.TextSize = 12
+customOption.Font = Enum.Font.Gotham
+customOption.BorderSizePixel = 0
+
+-- 下拉選單功能
+modeDropdown.MouseButton1Click:Connect(function()
+    modeOptions.Visible = not modeOptions.Visible
 end)
 
-autoAbilityOption1.MouseButton1Click:Connect(function()
-    currentAbilityMode = "普通"
-    autoAbilityDropdownBtn.Text = "普通 ▼"
-    autoAbilityDropdownMenu.Visible = false
-    -- 選單關閉時移回按鈕
-    animateButtonPosition(autoAbilityBtn, UDim2.new(0.5, -90, 0, 55))
-    animateButtonPosition(autoAttackBtn, UDim2.new(0.5, -90, 0, 100))
-    animateButtonPosition(playerInput, UDim2.new(0.5, -90, 0, 145))
-    animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 190))
+normalOption.MouseButton1Click:Connect(function()
+    barrierMode = "普通"
+    modeDropdown.Text = "模式: " .. barrierMode
+    modeOptions.Visible = false
 end)
 
-autoAbilityOption2.MouseButton1Click:Connect(function()
-    currentAbilityMode = "自訂位置"
-    autoAbilityDropdownBtn.Text = "自訂位置 ▼"
-    autoAbilityDropdownMenu.Visible = false
-    -- 選單關閉時移回按鈕
-    animateButtonPosition(autoAbilityBtn, UDim2.new(0.5, -90, 0, 55))
-    animateButtonPosition(autoAttackBtn, UDim2.new(0.5, -90, 0, 100))
-    animateButtonPosition(playerInput, UDim2.new(0.5, -90, 0, 145))
-    animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 190))
+customOption.MouseButton1Click:Connect(function()
+    barrierMode = "自訂位置"
+    modeDropdown.Text = "模式: " .. barrierMode
+    modeOptions.Visible = false
+end)
+
+-- 創建自動攻擊按鈕
+local autoAttackBtn = createButton("自動攻擊: 關", 2, barrierSection, 50)
+autoAttackBtn.Position = UDim2.new(0.5, -90, 0, 160)
+
+-- 創建幫助模式按鈕
+local helpModeBtn = createButton("幫助模式: 關", 3, barrierSection, 50)
+helpModeBtn.Position = UDim2.new(0.5, -90, 0, 210)
+
+-- 創建玩家名稱輸入框
+local playerInputFrame = Instance.new("Frame", barrierSection)
+playerInputFrame.Size = UDim2.new(0, 180, 0, 25)
+playerInputFrame.Position = UDim2.new(0.5, -90, 0, 255)
+playerInputFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+playerInputFrame.BorderSizePixel = 0
+Instance.new("UICorner", playerInputFrame).CornerRadius = UDim.new(0, 6)
+
+playerInput = Instance.new("TextBox", playerInputFrame)
+playerInput.Size = UDim2.new(1, -10, 1, 0)
+playerInput.Position = UDim2.new(0, 5, 0, 0)
+playerInput.BackgroundTransparency = 1
+playerInput.Text = "輸入玩家名稱"
+playerInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+playerInput.TextSize = 12
+playerInput.Font = Enum.Font.Gotham
+playerInput.PlaceholderText = "輸入玩家名稱"
+
+-- 創建幫助模式下拉選單
+local helpModeDropdown = Instance.new("TextButton", barrierSection)
+helpModeDropdown.Size = UDim2.new(0, 180, 0, 25)
+helpModeDropdown.Position = UDim2.new(0.5, -90, 0, 285)
+helpModeDropdown.Text = "幫助模式: " .. helpMode
+helpModeDropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+helpModeDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+helpModeDropdown.TextSize = 14
+helpModeDropdown.Font = Enum.Font.Gotham
+helpModeDropdown.BorderSizePixel = 0
+Instance.new("UICorner", helpModeDropdown).CornerRadius = UDim.new(0, 6)
+
+-- 幫助模式選項框架
+local helpModeOptions = Instance.new("Frame", barrierSection)
+helpModeOptions.Size = UDim2.new(0, 180, 0, 60)
+helpModeOptions.Position = UDim2.new(0.5, -90, 0, 310)
+helpModeOptions.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+helpModeOptions.BorderSizePixel = 0
+helpModeOptions.Visible = false
+Instance.new("UICorner", helpModeOptions).CornerRadius = UDim.new(0, 6)
+
+-- 被打後重置選項
+local resetOption = Instance.new("TextButton", helpModeOptions)
+resetOption.Size = UDim2.new(1, 0, 0.5, 0)
+resetOption.Position = UDim2.new(0, 0, 0, 0)
+resetOption.Text = "被打後重置"
+resetOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+resetOption.TextColor3 = Color3.fromRGB(255, 255, 255)
+resetOption.TextSize = 12
+resetOption.Font = Enum.Font.Gotham
+resetOption.BorderSizePixel = 0
+
+-- 被打後不重置選項
+local noResetOption = Instance.new("TextButton", helpModeOptions)
+noResetOption.Size = UDim2.new(1, 0, 0.5, 0)
+noResetOption.Position = UDim2.new(0, 0, 0.5, 0)
+noResetOption.Text = "被打後不重置"
+noResetOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+noResetOption.TextColor3 = Color3.fromRGB(255, 255, 255)
+noResetOption.TextSize = 12
+noResetOption.Font = Enum.Font.Gotham
+noResetOption.BorderSizePixel = 0
+
+-- 幫助模式下拉選單功能
+helpModeDropdown.MouseButton1Click:Connect(function()
+    helpModeOptions.Visible = not helpModeOptions.Visible
+end)
+
+resetOption.MouseButton1Click:Connect(function()
+    helpMode = "被打後重置"
+    helpModeDropdown.Text = "幫助模式: " .. helpMode
+    helpModeOptions.Visible = false
+end)
+
+noResetOption.MouseButton1Click:Connect(function()
+    helpMode = "被打後不重置"
+    helpModeDropdown.Text = "幫助模式: " .. helpMode
+    helpModeOptions.Visible = false
 end)
 
 -- 自動使用能力功能
 autoAbilityBtn.MouseButton1Click:Connect(function()
-    isAutoAbilityEnabled = not isAutoAbilityEnabled
-    autoAbilityBtn.Text = isAutoAbilityEnabled and "自動使用能力: 開" or "自動使用能力: 關"
+    isBarrierEnabled = not isBarrierEnabled
+    autoAbilityBtn.Text = isBarrierEnabled and "自動使用能力: 開" or "自動使用能力: 關"
     
-    if isAutoAbilityEnabled then
+    if isBarrierEnabled then
         -- 如果是自訂位置模式，記錄當前位置
-        if currentAbilityMode == "自訂位置" then
+        if barrierMode == "自訂位置" then
             local character = LocalPlayer.Character
             if character and character:FindFirstChild("HumanoidRootPart") then
-                customStartPosition = character.HumanoidRootPart.Position
-                customStartCFrame = character.HumanoidRootPart.CFrame
+                savedPosition = character.HumanoidRootPart.Position
+                savedCFrame = character.HumanoidRootPart.CFrame
             end
         end
         
-        autoAbilityLoop = task.spawn(function()
-            while isAutoAbilityEnabled do
-                -- 使用屏障能力
-                local args = {
-                    [1] = 1
-                }
-                game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args))
+        barrierLoop = task.spawn(function()
+            while isBarrierEnabled do
+                pcall(function()
+                    -- 執行屏障能力
+                    local args = {
+                        [1] = 1
+                    }
+                    game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args))
+                end)
                 
-                if currentAbilityMode == "普通" then
-                    -- 普通模式：等25秒後再執行一次
-                    task.wait(25)
-                    if isAutoAbilityEnabled then
-                        local args2 = {
-                            [1] = 1
-                        }
-                        game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args2))
-                    end
-                elseif currentAbilityMode == "自訂位置" then
-                    -- 自訂位置模式：等25秒後記錄結束位置，移動到開始位置再執行，然後回到結束位置
-                    task.wait(25)
-                    if isAutoAbilityEnabled then
+                -- 等待25秒
+                task.wait(25)
+                
+                if isBarrierEnabled then
+                    if barrierMode == "自訂位置" and savedPosition and savedCFrame then
+                        -- 移動到記錄的位置
                         local character = LocalPlayer.Character
                         if character and character:FindFirstChild("HumanoidRootPart") then
-                            -- 記錄25秒後的位置和方向
-                            customEndPosition = character.HumanoidRootPart.Position
-                            customEndCFrame = character.HumanoidRootPart.CFrame
+                            local originalPos = character.HumanoidRootPart.Position
+                            local originalCFrame = character.HumanoidRootPart.CFrame
                             
-                            -- 移動到開始位置
-                            if customStartCFrame then
-                                character.HumanoidRootPart.CFrame = customStartCFrame
-                                
-                                -- 再次使用屏障能力
-                                local args3 = {
+                            -- 移動到記錄位置
+                            character.HumanoidRootPart.CFrame = CFrame.new(savedPosition)
+                            
+                            -- 再次執行屏障能力
+                            pcall(function()
+                                local args = {
                                     [1] = 1
                                 }
-                                game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args3))
-                                
-                                -- 等0.1秒後回到原本位置
-                                task.wait(0.1)
-                                if customEndCFrame then
-                                    character.HumanoidRootPart.CFrame = customEndCFrame
-                                end
+                                game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args))
+                            end)
+                            
+                            -- 等待0.1秒後回到原位
+                            task.wait(0.1)
+                            if character and character:FindFirstChild("HumanoidRootPart") then
+                                character.HumanoidRootPart.CFrame = originalCFrame
                             end
                         end
                     end
                 end
-                
-                task.wait(1)
             end
         end)
-    elseif autoAbilityLoop then
-        task.cancel(autoAbilityLoop)
-        autoAbilityLoop = nil
+    elseif barrierLoop then
+        task.cancel(barrierLoop)
+        barrierLoop = nil
     end
 end)
 
@@ -564,115 +532,32 @@ autoAttackBtn.MouseButton1Click:Connect(function()
     if isAutoAttackEnabled then
         autoAttackLoop = task.spawn(function()
             while isAutoAttackEnabled do
-                local nearbyPlayer = findPlayerWithin25Units()
-                if nearbyPlayer and nearbyPlayer.Character and nearbyPlayer.Character:FindFirstChild("Right Arm") then
-                    local args = {
-                        [1] = nearbyPlayer.Character:FindFirstChild("Right Arm")
-                    }
-                    game:GetService("ReplicatedStorage").DefenseHit:FireServer(unpack(args))
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local myPosition = character.HumanoidRootPart.Position
+                    
+                    -- 尋找25單位內的玩家
+                    for _, player in pairs(Players:GetPlayers()) do
+                        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Right Arm") then
+                            local distance = (player.Character.HumanoidRootPart.Position - myPosition).Magnitude
+                            if distance <= 25 then
+                                pcall(function()
+                                    local args = {
+                                        [1] = player.Character:FindFirstChild("Right Arm")
+                                    }
+                                    game:GetService("ReplicatedStorage").DefenseHit:FireServer(unpack(args))
+                                end)
+                            end
+                        end
+                    end
                 end
-                task.wait(1)
+                task.wait(0.1) -- 短暫等待避免過度頻繁攻擊
             end
         end)
     elseif autoAttackLoop then
         task.cancel(autoAttackLoop)
         autoAttackLoop = nil
     end
-end)
-
--- 修改標題
-Title.Text = "🔰 屏障 🔰"
-
--- 修改全域變數
-local currentHelpMode = "被打後重置"
-
-
--- 創建幫助模式下拉選單按鈕
-local helpModeDropdownBtn = Instance.new("TextButton", MainScroll)
-helpModeDropdownBtn.Size = UDim2.new(0, 180, 0, 35)
-helpModeDropdownBtn.Position = UDim2.new(0.5, -90, 0, 235)
-helpModeDropdownBtn.Text = "被打後重置 ▼"
-helpModeDropdownBtn.BackgroundColor3 = Color3.fromRGB(80, 140, 220)
-helpModeDropdownBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-helpModeDropdownBtn.TextSize = 16
-helpModeDropdownBtn.Font = Enum.Font.GothamBold
-helpModeDropdownBtn.BorderSizePixel = 0
-
-Instance.new("UICorner", helpModeDropdownBtn).CornerRadius = UDim.new(0, 8)
-
-local helpModeDropdownStroke = Instance.new("UIStroke", helpModeDropdownBtn)
-helpModeDropdownStroke.Color = Color3.fromRGB(120, 170, 255)
-helpModeDropdownStroke.Thickness = 1
-helpModeDropdownStroke.Transparency = 0.6
-
--- 創建幫助模式下拉菜單
-local helpModeDropdownMenu = Instance.new("Frame", MainScroll)
-helpModeDropdownMenu.Size = UDim2.new(0, 180, 0, 70)
-helpModeDropdownMenu.Position = UDim2.new(0.5, -90, 0, 270)
-helpModeDropdownMenu.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-helpModeDropdownMenu.BorderSizePixel = 0
-helpModeDropdownMenu.Visible = false
-
-Instance.new("UICorner", helpModeDropdownMenu).CornerRadius = UDim.new(0, 8)
-
-local helpModeMenuStroke = Instance.new("UIStroke", helpModeDropdownMenu)
-helpModeMenuStroke.Color = Color3.fromRGB(120, 170, 255)
-helpModeMenuStroke.Thickness = 1
-helpModeMenuStroke.Transparency = 0.6
-
--- 幫助模式下拉選項1
-local helpModeOption1 = Instance.new("TextButton", helpModeDropdownMenu)
-helpModeOption1.Size = UDim2.new(1, 0, 0, 35)
-helpModeOption1.Position = UDim2.new(0, 0, 0, 0)
-helpModeOption1.Text = "被打後重置"
-helpModeOption1.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-helpModeOption1.TextColor3 = Color3.fromRGB(255, 255, 255)
-helpModeOption1.TextSize = 14
-helpModeOption1.Font = Enum.Font.Gotham
-helpModeOption1.BorderSizePixel = 0
-
--- 幫助模式下拉選項2
-local helpModeOption2 = Instance.new("TextButton", helpModeDropdownMenu)
-helpModeOption2.Size = UDim2.new(1, 0, 0, 35)
-helpModeOption2.Position = UDim2.new(0, 0, 0, 35)
-helpModeOption2.Text = "被打後不重置"
-helpModeOption2.BackgroundColor3 = Color3.fromRGB(60, 60, 85)
-helpModeOption2.TextColor3 = Color3.fromRGB(255, 255, 255)
-helpModeOption2.TextSize = 14
-helpModeOption2.Font = Enum.Font.Gotham
-helpModeOption2.BorderSizePixel = 0
-
--- 調整幫助模式按鈕位置
-helpModeBtn.Position = UDim2.new(0.5, -90, 0, 280)
-
--- 幫助模式下拉選單功能
-helpModeDropdownBtn.MouseButton1Click:Connect(function()
-    -- 关闭自动使用能力下拉选单
-    if autoAbilityDropdownMenu.Visible then
-        autoAbilityDropdownMenu.Visible = false
-        -- 将按钮移回原位
-        animateButtonPosition(autoAbilityBtn, UDim2.new(0.5, -90, 0, 55))
-        animateButtonPosition(autoAttackBtn, UDim2.new(0.5, -90, 0, 100))
-        animateButtonPosition(playerInput, UDim2.new(0.5, -90, 0, 145))
-        animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 190))
-    end
-    
-    helpModeDropdownMenu.Visible = not helpModeDropdownMenu.Visible
-    
-    if helpModeDropdownMenu.Visible then
-        -- 選單展開時，將幫助模式按鈕向下移動
-        animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 350))
-    else
-        -- 選單關閉時，將幫助模式按鈕移回原位
-        animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 280))
-    end
-end)
-
-helpModeOption2.MouseButton1Click:Connect(function()
-    currentHelpMode = "被打後不重置"
-    helpModeDropdownBtn.Text = "被打後不重置 ▼"
-    helpModeDropdownMenu.Visible = false
-    animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 280))
 end)
 
 -- 幫助模式功能
@@ -682,7 +567,7 @@ helpModeBtn.MouseButton1Click:Connect(function()
     
     if isHelpModeEnabled then
         local targetName = playerInput.Text
-        if targetName == "" then
+        if targetName == "" or targetName == "輸入玩家名稱" then
             helpModeBtn.Text = "幫助模式: 關"
             isHelpModeEnabled = false
             return
@@ -708,64 +593,30 @@ helpModeBtn.MouseButton1Click:Connect(function()
                     continue
                 end
                 
-                if currentHelpMode == "被打後重置" then
-                    -- 被打後重置模式 - 使用範本邏輯
-                    pcall(function()
-                        -- 傳送到 Lobby.Teleport1
-                        local teleport1 = Workspace.Lobby:FindFirstChild("Teleport1")
-                        if teleport1 and isHelpModeEnabled then
-                            humanoidRootPart.CFrame = teleport1.CFrame
-                            task.wait(0.3)
-                        end
+                pcall(function()
+                    -- 傳送到 Lobby.Teleport1
+                    local teleport1 = Workspace.Lobby:FindFirstChild("Teleport1")
+                    if teleport1 and isHelpModeEnabled then
+                        humanoidRootPart.CFrame = teleport1.CFrame
+                        task.wait(0.3)
+                    end
+                    
+                    -- 持續跟隨目標玩家
+                    local targetPlayer = Players:FindFirstChild(targetName)
+                    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and isHelpModeEnabled then
+                        local playerWorkspaceFolder = Workspace:FindFirstChild(LocalPlayer.Name)
+                        local lastUpdateTime = tick()
                         
-                        -- 持續跟隨目標玩家
-                        local targetPlayer = Players:FindFirstChild(targetName)
-                        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and isHelpModeEnabled then
-                            local playerWorkspaceFolder = Workspace:FindFirstChild(LocalPlayer.Name)
-                            local lastUpdateTime = tick()
+                        -- 持續移動直到檢測到LastSlappedBy
+                        while isHelpModeEnabled and character.Parent and humanoid.Health > 0 and playerWorkspaceFolder do
                             
-                            -- 持續移動直到檢測到LastSlappedBy
-                            while isHelpModeEnabled and character.Parent and humanoid.Health > 0 and playerWorkspaceFolder do
+                            -- 檢查是否被目標玩家打中
+                            local lastSlappedBy = playerWorkspaceFolder:FindFirstChild("LastSlappedBy")
+                            if lastSlappedBy and lastSlappedBy.Value == targetName then
+                                task.wait(0.5) -- 等待0.5秒
                                 
-                                -- 檢查是否被目標玩家打中
-                                local lastSlappedBy = playerWorkspaceFolder:FindFirstChild("LastSlappedBy")
-                                if lastSlappedBy and lastSlappedBy.Value == targetName then
-                                    task.wait(0.5) -- 等待0.5秒
-                                    break -- 跳出循環進行重置
-                                end
-                                
-                                local currentTime = tick()
-                                if currentTime - lastUpdateTime < 0.2 then
-                                    task.wait(0.1)
-                                    continue
-                                end
-                                lastUpdateTime = currentTime
-                                
-                                if not (targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-                                    break
-                                end
-                                
-                                pcall(function()
-                                    local targetRoot = targetPlayer.Character.HumanoidRootPart
-                                    local targetPos = targetRoot.Position
-                                    local targetLookDirection = targetRoot.CFrame.LookVector
-                                    
-                                    local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-                                    
-                                    if (humanoidRootPart.Position - newPos).Magnitude > 1 then
-                                        humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
-                                    end
-                                end)
-                                
-                                task.wait(0.1)
-                            end
-                            
-                            -- 檢查LastSlappedBy並重置
-                            if isHelpModeEnabled and playerWorkspaceFolder then
-                                local lastSlappedBy = playerWorkspaceFolder:FindFirstChild("LastSlappedBy")
-                                if lastSlappedBy and lastSlappedBy.Value == targetName then
-                                    
-                                    -- 安全傳送到指定坐標
+                                if helpMode == "被打後重置" then
+                                    -- 重置模式
                                     pcall(function()
                                         if humanoidRootPart and humanoidRootPart.Parent then
                                             humanoidRootPart.CFrame = CFrame.new(263, 13, 197)
@@ -803,38 +654,50 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                           newCharacter:FindFirstChild("Humanoid") and newCharacter.Humanoid.Health > 0
                                     
                                     task.wait(0.3)
-                                end
-                            end
-                        end
-                    end)
-                    
-                elseif currentHelpMode == "被打後不重置" then
-                    -- 被打後不重置模式 - 持續移動到當前位置直到解除
-                    pcall(function()
-                        local targetPlayer = Players:FindFirstChild(targetName)
-                        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and isHelpModeEnabled then
-                            
-                            while isHelpModeEnabled and character.Parent and humanoid.Health > 0 do
-                                
-                                if not (targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+                                    break
+                                else
+                                    -- 不重置模式 - 鎖定在當前位置
+                                    isMovingLocked = true
+                                    local lockedPosition = humanoidRootPart.Position
+                                    
+                                    -- 持續鎖定位置直到功能關閉
+                                    while isHelpModeEnabled and isMovingLocked do
+                                        if humanoidRootPart and humanoidRootPart.Parent then
+                                            humanoidRootPart.Position = lockedPosition
+                                        end
+                                        task.wait(0.1)
+                                    end
                                     break
                                 end
-                                
-                                pcall(function()
-                                    local targetRoot = targetPlayer.Character.HumanoidRootPart
-                                    local targetPos = targetRoot.Position
-                                    local targetLookDirection = targetRoot.CFrame.LookVector
-                                    
-                                    local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-                                    
-                                    humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
-                                end)
-                                
-                                task.wait(0.1)
                             end
+                            
+                            local currentTime = tick()
+                            if currentTime - lastUpdateTime < 0.2 then
+                                task.wait(0.1)
+                                continue
+                            end
+                            lastUpdateTime = currentTime
+                            
+                            if not (targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+                                break
+                            end
+                            
+                            pcall(function()
+                                local targetRoot = targetPlayer.Character.HumanoidRootPart
+                                local targetPos = targetRoot.Position
+                                local targetLookDirection = targetRoot.CFrame.LookVector
+                                
+                                local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                                
+                                if (humanoidRootPart.Position - newPos).Magnitude > 1 then
+                                    humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                                end
+                            end)
+                            
+                            task.wait(0.1)
                         end
-                    end)
-                end
+                    end
+                end)
                 
                 if isHelpModeEnabled then
                     task.wait(1)
@@ -844,5 +707,22 @@ helpModeBtn.MouseButton1Click:Connect(function()
     elseif helpModeLoop then
         task.cancel(helpModeLoop)
         helpModeLoop = nil
+        isMovingLocked = false -- 解除位置鎖定
     end
 end)
+
+-- 修改現有的分區切換邏輯，添加屏障分區
+Section5.MouseButton1Click:Connect(function()
+    -- 隱藏所有分區
+    a.Visible = false
+    b.Visible = false
+    c.Visible = false
+    d.Visible = false
+    barrierSection.Visible = false
+    
+    -- 顯示屏障分區
+    barrierSection.Visible = true
+end)
+
+
+
