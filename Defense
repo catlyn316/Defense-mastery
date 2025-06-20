@@ -440,6 +440,12 @@ end
 
 -- 自動使用能力下拉選單功能
 autoAbilityDropdownBtn.MouseButton1Click:Connect(function()
+    -- 关闭帮助模式下拉选单
+    if helpModeDropdownMenu.Visible then
+        helpModeDropdownMenu.Visible = false
+        animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 280))
+    end
+    
     autoAbilityDropdownMenu.Visible = not autoAbilityDropdownMenu.Visible
     
     if autoAbilityDropdownMenu.Visible then
@@ -580,29 +586,6 @@ Title.Text = "🔰 屏障 🔰"
 -- 修改全域變數
 local currentHelpMode = "被打後重置"
 
--- 修改自動攻擊功能 - 攻擊25單位內的人
-autoAttackBtn.MouseButton1Click:Connect(function()
-    isAutoAttackEnabled = not isAutoAttackEnabled
-    autoAttackBtn.Text = isAutoAttackEnabled and "自動攻擊: 開" or "自動攻擊: 關"
-    
-    if isAutoAttackEnabled then
-        autoAttackLoop = task.spawn(function()
-            while isAutoAttackEnabled do
-                local nearbyPlayer = findPlayerWithin25Units()
-                if nearbyPlayer and nearbyPlayer.Character and nearbyPlayer.Character:FindFirstChild("Right Arm") then
-                    local args = {
-                        [1] = nearbyPlayer.Character:FindFirstChild("Right Arm")
-                    }
-                    game:GetService("ReplicatedStorage").DefenseHit:FireServer(unpack(args))
-                end
-                task.wait(1)
-            end
-        end)
-    elseif autoAttackLoop then
-        task.cancel(autoAttackLoop)
-        autoAttackLoop = nil
-    end
-end)
 
 -- 創建幫助模式下拉選單按鈕
 local helpModeDropdownBtn = Instance.new("TextButton", MainScroll)
@@ -664,6 +647,16 @@ helpModeBtn.Position = UDim2.new(0.5, -90, 0, 280)
 
 -- 幫助模式下拉選單功能
 helpModeDropdownBtn.MouseButton1Click:Connect(function()
+    -- 关闭自动使用能力下拉选单
+    if autoAbilityDropdownMenu.Visible then
+        autoAbilityDropdownMenu.Visible = false
+        -- 将按钮移回原位
+        animateButtonPosition(autoAbilityBtn, UDim2.new(0.5, -90, 0, 55))
+        animateButtonPosition(autoAttackBtn, UDim2.new(0.5, -90, 0, 100))
+        animateButtonPosition(playerInput, UDim2.new(0.5, -90, 0, 145))
+        animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 190))
+    end
+    
     helpModeDropdownMenu.Visible = not helpModeDropdownMenu.Visible
     
     if helpModeDropdownMenu.Visible then
@@ -673,13 +666,6 @@ helpModeDropdownBtn.MouseButton1Click:Connect(function()
         -- 選單關閉時，將幫助模式按鈕移回原位
         animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 280))
     end
-end)
-
-helpModeOption1.MouseButton1Click:Connect(function()
-    currentHelpMode = "被打後重置"
-    helpModeDropdownBtn.Text = "被打後重置 ▼"
-    helpModeDropdownMenu.Visible = false
-    animateButtonPosition(helpModeBtn, UDim2.new(0.5, -90, 0, 280))
 end)
 
 helpModeOption2.MouseButton1Click:Connect(function()
