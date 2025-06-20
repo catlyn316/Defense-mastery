@@ -375,9 +375,108 @@ customOption.MouseButton1Click:Connect(function()
     modeOptions.Visible = false
 end)
 
+-- 自動使用能力按鈕功能
+autoAbilityBtn.MouseButton1Click:Connect(function()
+    isBarrierEnabled = not isBarrierEnabled
+    autoAbilityBtn.Text = isBarrierEnabled and "自動使用能力: 開" or "自動使用能力: 關"
+    
+    if isBarrierEnabled then
+        -- 記錄自訂位置模式的位置
+        if barrierMode == "自訂位置" then
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                savedPosition = character.HumanoidRootPart.Position
+                savedCFrame = character.HumanoidRootPart.CFrame
+            end
+        end
+        
+        barrierLoop = task.spawn(function()
+            while isBarrierEnabled do
+                -- 執行屏障能力
+                pcall(function()
+                    local args = {
+                        [1] = 1
+                    }
+                    game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args))
+                end)
+                
+                -- 等待25秒
+                task.wait(25)
+                
+                if not isBarrierEnabled then break end
+                
+                if barrierMode == "自訂位置" then
+                    -- 自訂位置模式：移動到按下時的位置
+                    if savedPosition then
+                        local character = LocalPlayer.Character
+                        if character and character:FindFirstChild("HumanoidRootPart") then
+                            local currentCFrame = character.HumanoidRootPart.CFrame
+                            character.HumanoidRootPart.Position = savedPosition
+                            
+                            -- 執行第二次屏障能力
+                            task.wait(0.1)
+                            pcall(function()
+                                local args = {
+                                    [1] = 1
+                                }
+                                game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args))
+                            end)
+                            
+                            -- 等待0.1秒後回到原位置和方向
+                            task.wait(0.1)
+                            if savedCFrame then
+                                character.HumanoidRootPart.CFrame = currentCFrame
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    elseif barrierLoop then
+        task.cancel(barrierLoop)
+        barrierLoop = nil
+    end
+end)
+
 -- 創建自動攻擊按鈕
 local autoAttackBtn = createButton("自動攻擊: 關", 2, barrierSection, 50)
 autoAttackBtn.Position = UDim2.new(0.5, -90, 0, 160)
+
+-- 自動攻擊按鈕功能
+autoAttackBtn.MouseButton1Click:Connect(function()
+    isAutoAttackEnabled = not isAutoAttackEnabled
+    autoAttackBtn.Text = isAutoAttackEnabled and "自動攻擊: 開" or "自動攻擊: 關"
+    
+    if isAutoAttackEnabled then
+        autoAttackLoop = task.spawn(function()
+            while isAutoAttackEnabled do
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local playerPosition = character.HumanoidRootPart.Position
+                    
+                    -- 尋找25單位內的其他玩家
+                    for _, player in pairs(Players:GetPlayers()) do
+                        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Right Arm") then
+                            local distance = (player.Character.HumanoidRootPart.Position - playerPosition).Magnitude
+                            if distance <= 25 then
+                                pcall(function()
+                                    local args = {
+                                        [1] = player.Character:FindFirstChild("Right Arm")
+                                    }
+                                    game:GetService("ReplicatedStorage").DefenseHit:FireServer(unpack(args))
+                                end)
+                            end
+                        end
+                    end
+                end
+                task.wait(0.1) -- 每0.1秒檢查一次
+            end
+        end)
+    elseif autoAttackLoop then
+        task.cancel(autoAttackLoop)
+        autoAttackLoop = nil
+    end
+end)
 
 -- 創建幫助模式按鈕
 local helpModeBtn = createButton("幫助模式: 關", 3, barrierSection, 50)
@@ -416,7 +515,7 @@ Instance.new("UICorner", helpModeDropdown).CornerRadius = UDim.new(0, 6)
 
 -- 幫助模式選項框架
 local helpModeOptions = Instance.new("Frame", barrierSection)
-helpModeOptions.Size = UDim2.new(0, 180, 0, 120) -- 增加高度來容納三個選項
+helpModeOptions.Size = UDim2.new(0, 180, 0, 120)
 helpModeOptions.Position = UDim2.new(0.5, -90, 0, 310)
 helpModeOptions.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 helpModeOptions.BorderSizePixel = 0
@@ -580,36 +679,11 @@ helpModeBtn.MouseButton1Click:Connect(function()
                 end
                 
                 pcall(function()
-                    -- 只有在非滑行模式下才傳送到 Lobby.Teleport1
-                    if helpMode ~= "被打後滑行" then
-                        local teleport1 = Workspace.Lobby:FindFirstChild("Teleport1")
-                        if teleport1 and isHelpModeEnabled then
-                            humanoidRootPart.CFrame = teleport1.CFrame
-                            task.wait(0.3)
-                        end
-                    end
-                    
                     -- 持續跟隨目標玩家
                     local targetPlayer = Players:FindFirstChild(targetName)
                     if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and isHelpModeEnabled then
                         local playerWorkspaceFolder = Workspace:FindFirstChild(LocalPlayer.Name)
                         local lastUpdateTime = tick()
-                        
-                        -- 滑行模式：直接移動到目標前方
-                        if helpMode == "被打後滑行" then
-                            -- 直接移動到目標玩家前方5單位
-                            pcall(function()
-                                local targetRoot = targetPlayer.Character.HumanoidRootPart
-                                local targetPos = targetRoot.Position
-                                local targetLookDirection = targetRoot.CFrame.LookVector
-                                
-                                local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-                                
-                                if humanoidRootPart and humanoidRootPart.Parent then
-                                    humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
-                                end
-                            end)
-                        end
                         
                         -- 持續移動直到檢測到LastSlappedBy
                         while isHelpModeEnabled and character.Parent and humanoid.Health > 0 and playerWorkspaceFolder do
@@ -660,7 +734,7 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                     task.wait(0.3)
                                     break
                                 elseif helpMode == "被打後滑行" then
-                                    -- 新的滑行模式：直接滑行到dedBarrier
+                                    -- 滑行模式 - 直接滑行到barrier
                                     if slideToBarrier(targetName) then
                                         -- 等待滑行完成
                                         while isSliding and isHelpModeEnabled do
@@ -693,34 +767,28 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                 end
                             end
                             
-                            -- 非滑行模式才需要持續跟隨
-                            if helpMode ~= "被打後滑行" then
-                                local currentTime = tick()
-                                if currentTime - lastUpdateTime < 0.2 then
-                                    task.wait(0.1)
-                                    continue
-                                end
-                                lastUpdateTime = currentTime
-                                
-                                if not (targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-                                    break
-                                end
-                                
-                                pcall(function()
-                                    local targetRoot = targetPlayer.Character.HumanoidRootPart
-                                    local targetPos = targetRoot.Position
-                                    local targetLookDirection = targetRoot.CFrame.LookVector
-                                    
-                                    local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-                                    
-                                    if (humanoidRootPart.Position - newPos).Magnitude > 1 then
-                                        humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
-                                    end
-                                end)
-                            else
-                                -- 滑行模式：等待被打中
+                            local currentTime = tick()
+                            if currentTime - lastUpdateTime < 0.2 then
                                 task.wait(0.1)
+                                continue
                             end
+                            lastUpdateTime = currentTime
+                            
+                            if not (targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+                                break
+                            end
+                            
+                            pcall(function()
+                                local targetRoot = targetPlayer.Character.HumanoidRootPart
+                                local targetPos = targetRoot.Position
+                                local targetLookDirection = targetRoot.CFrame.LookVector
+                                
+                                local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                                
+                                if (humanoidRootPart.Position - newPos).Magnitude > 1 then
+                                    humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                                end
+                            end)
                             
                             task.wait(0.1)
                         end
