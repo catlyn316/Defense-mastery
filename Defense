@@ -713,11 +713,6 @@ end)
 
 -- 修改現有的分區切換邏輯，添加屏障分區
 Section5.MouseButton1Click:Connect(function()
-    -- 隱藏所有分區
-    a.Visible = false
-    b.Visible = false
-    c.Visible = false
-    d.Visible = false
     barrierSection.Visible = false
     
     -- 顯示屏障分區
