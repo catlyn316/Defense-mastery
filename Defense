@@ -72,7 +72,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -80, 0, 50)
 Title.Position = UDim2.new(0, 15, 0, 0)  -- 往上移動5像素原為5
 Title.BackgroundTransparency = 1
-Title.Text = "✨ 貓玲的腳本區 ✨v0.2"
+Title.Text = "✨ 貓玲的腳本區 ✨v0.3"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -391,11 +391,32 @@ playerInputFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 playerInputFrame.BorderSizePixel = 0
 Instance.new("UICorner", playerInputFrame).CornerRadius = UDim.new(0, 6)
 
+-- 創建輸入框
+local playerInput = Instance.new("TextBox", playerInputFrame)
+playerInput.Size = UDim2.new(1, -10, 1, -4)
+playerInput.Position = UDim2.new(0, 5, 0, 2)
+playerInput.BackgroundTransparency = 1
+playerInput.Text = "輸入玩家名稱"
+playerInput.TextColor3 = Color3.fromRGB(200, 200, 200)
+playerInput.TextSize = 12
+playerInput.Font = Enum.Font.Gotham
+playerInput.ClearTextOnFocus = true
 
+-- 創建幫助模式下拉選單
+local helpModeDropdown = Instance.new("TextButton", barrierSection)
+helpModeDropdown.Size = UDim2.new(0, 180, 0, 25)
+helpModeDropdown.Position = UDim2.new(0.5, -90, 0, 285)
+helpModeDropdown.Text = "模式: " .. helpMode
+helpModeDropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+helpModeDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+helpModeDropdown.TextSize = 14
+helpModeDropdown.Font = Enum.Font.Gotham
+helpModeDropdown.BorderSizePixel = 0
+Instance.new("UICorner", helpModeDropdown).CornerRadius = UDim.new(0, 6)
 
--- 修改幫助模式選項框架的大小
+-- 幫助模式選項框架
 local helpModeOptions = Instance.new("Frame", barrierSection)
-helpModeOptions.Size = UDim2.new(0, 180, 0, 90) -- 從60改為90來容納三個選項
+helpModeOptions.Size = UDim2.new(0, 180, 0, 120) -- 增加高度來容納三個選項
 helpModeOptions.Position = UDim2.new(0.5, -90, 0, 310)
 helpModeOptions.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 helpModeOptions.BorderSizePixel = 0
@@ -404,7 +425,7 @@ Instance.new("UICorner", helpModeOptions).CornerRadius = UDim.new(0, 6)
 
 -- 被打後重置選項
 local resetOption = Instance.new("TextButton", helpModeOptions)
-resetOption.Size = UDim2.new(1, 0, 0.33, 0) -- 從0.5改為0.33
+resetOption.Size = UDim2.new(1, 0, 0.33, 0)
 resetOption.Position = UDim2.new(0, 0, 0, 0)
 resetOption.Text = "被打後重置"
 resetOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
@@ -415,8 +436,8 @@ resetOption.BorderSizePixel = 0
 
 -- 被打後不重置選項
 local noResetOption = Instance.new("TextButton", helpModeOptions)
-noResetOption.Size = UDim2.new(1, 0, 0.33, 0) -- 從0.5改為0.33
-noResetOption.Position = UDim2.new(0, 0, 0.33, 0) -- 從0.5改為0.33
+noResetOption.Size = UDim2.new(1, 0, 0.33, 0)
+noResetOption.Position = UDim2.new(0, 0, 0.33, 0)
 noResetOption.Text = "被打後不重置"
 noResetOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 noResetOption.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -424,107 +445,108 @@ noResetOption.TextSize = 12
 noResetOption.Font = Enum.Font.Gotham
 noResetOption.BorderSizePixel = 0
 
+-- 被打後滑行選項
+local slideOption = Instance.new("TextButton", helpModeOptions)
+slideOption.Size = UDim2.new(1, 0, 0.33, 0)
+slideOption.Position = UDim2.new(0, 0, 0.66, 0)
+slideOption.Text = "被打後滑行"
+slideOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+slideOption.TextColor3 = Color3.fromRGB(255, 255, 255)
+slideOption.TextSize = 12
+slideOption.Font = Enum.Font.Gotham
+slideOption.BorderSizePixel = 0
 
--- 自動使用能力功能
-autoAbilityBtn.MouseButton1Click:Connect(function()
-    isBarrierEnabled = not isBarrierEnabled
-    autoAbilityBtn.Text = isBarrierEnabled and "自動使用能力: 開" or "自動使用能力: 關"
+-- 幫助模式下拉選單功能
+helpModeDropdown.MouseButton1Click:Connect(function()
+    helpModeOptions.Visible = not helpModeOptions.Visible
+end)
+
+resetOption.MouseButton1Click:Connect(function()
+    helpMode = "被打後重置"
+    helpModeDropdown.Text = "模式: " .. helpMode
+    helpModeOptions.Visible = false
+end)
+
+noResetOption.MouseButton1Click:Connect(function()
+    helpMode = "被打後不重置"
+    helpModeDropdown.Text = "模式: " .. helpMode
+    helpModeOptions.Visible = false
+end)
+
+slideOption.MouseButton1Click:Connect(function()
+    helpMode = "被打後滑行"
+    helpModeDropdown.Text = "模式: " .. helpMode
+    helpModeOptions.Visible = false
+end)
+
+-- 添加滑行功能變數
+local isSliding = false
+local slideConnection = nil
+
+-- 滑行到barrier的函數
+local function slideToBarrier(targetName)
+    local barrierFolder = Workspace.dedBarrier:FindFirstChild(targetName .. "Barrier")
+    if not barrierFolder then
+        return false
+    end
     
-    if isBarrierEnabled then
-        -- 如果是自訂位置模式，記錄按下按鈕時的位置
-        if barrierMode == "自訂位置" then
-            local character = LocalPlayer.Character
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                savedPosition = character.HumanoidRootPart.Position
-                savedCFrame = character.HumanoidRootPart.CFrame
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then
+        return false
+    end
+    
+    local humanoidRootPart = character.HumanoidRootPart
+    local startPos = humanoidRootPart.Position
+    local targetPos = barrierFolder.Position
+    
+    isSliding = true
+    local startTime = tick()
+    local slideSpeed = 50 -- 滑行速度
+    local totalDistance = (targetPos - startPos).Magnitude
+    local slideTime = totalDistance / slideSpeed
+    
+    slideConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not isSliding or not character.Parent or not humanoidRootPart.Parent then
+            if slideConnection then
+                slideConnection:Disconnect()
+                slideConnection = nil
             end
+            isSliding = false
+            return
         end
         
-        barrierLoop = task.spawn(function()
-            while isBarrierEnabled do
-                -- 執行屏障能力
-                pcall(function()
-                    local args = {
-                        [1] = 1
-                    }
-                    game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args))
-                end)
-                
-                -- 等待25秒
-                task.wait(25)
-                
-                if isBarrierEnabled and barrierMode == "自訂位置" and savedPosition and savedCFrame then
-                    -- 記錄當前位置和面對方向
-                    local character = LocalPlayer.Character
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        local currentPosition = character.HumanoidRootPart.Position
-                        local currentCFrame = character.HumanoidRootPart.CFrame
-                        
-                        -- 移動到按下按鈕時記錄的位置
-                        character.HumanoidRootPart.CFrame = savedCFrame
-                        
-                        -- 在記錄位置執行屏障能力
-                        pcall(function()
-                            local args = {
-                                [1] = 1
-                            }
-                            game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args))
-                        end)
-                        
-                        -- 等待0.1秒後回到當前位置
-                        task.wait(0.1)
-                        if character and character:FindFirstChild("HumanoidRootPart") then
-                            character.HumanoidRootPart.CFrame = currentCFrame
-                        end
-                    end
-                elseif isBarrierEnabled and barrierMode == "普通" then
-                    -- 普通模式不需要額外操作
-                end
+        local elapsed = tick() - startTime
+        local progress = math.min(elapsed / slideTime, 1)
+        
+        -- 計算當前位置
+        local currentPos = startPos:Lerp(targetPos, progress)
+        humanoidRootPart.CFrame = CFrame.new(currentPos, targetPos)
+        
+        -- 檢查是否碰到barrier或滑行完成
+        local distance = (humanoidRootPart.Position - targetPos).Magnitude
+        if distance < 5 or progress >= 1 then
+            -- 停止滑行
+            isSliding = false
+            if slideConnection then
+                slideConnection:Disconnect()
+                slideConnection = nil
             end
-        end)
-    elseif barrierLoop then
-        task.cancel(barrierLoop)
-        barrierLoop = nil
-    end
-end)
-
--- 自動攻擊功能
-autoAttackBtn.MouseButton1Click:Connect(function()
-    isAutoAttackEnabled = not isAutoAttackEnabled
-    autoAttackBtn.Text = isAutoAttackEnabled and "自動攻擊: 開" or "自動攻擊: 關"
+            
+            -- 回到目標玩家面向方向5單位處
+            local targetPlayer = Players:FindFirstChild(targetName)
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local targetRoot = targetPlayer.Character.HumanoidRootPart
+                local targetLookDirection = targetRoot.CFrame.LookVector
+                local newPos = targetRoot.Position + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+            end
+        end
+    end)
     
-    if isAutoAttackEnabled then
-        autoAttackLoop = task.spawn(function()
-            while isAutoAttackEnabled do
-                local character = LocalPlayer.Character
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    local myPosition = character.HumanoidRootPart.Position
-                    
-                    -- 尋找25單位內的玩家
-                    for _, player in pairs(Players:GetPlayers()) do
-                        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Right Arm") then
-                            local distance = (player.Character.HumanoidRootPart.Position - myPosition).Magnitude
-                            if distance <= 25 then
-                                pcall(function()
-                                    local args = {
-                                        [1] = player.Character:FindFirstChild("Right Arm")
-                                    }
-                                    game:GetService("ReplicatedStorage").DefenseHit:FireServer(unpack(args))
-                                end)
-                            end
-                        end
-                    end
-                end
-                task.wait(0.5) -- 短暫等待避免過度頻繁攻擊
-            end
-        end)
-    elseif autoAttackLoop then
-        task.cancel(autoAttackLoop)
-        autoAttackLoop = nil
-    end
-end)
+    return true
+end
 
--- 幫助模式功能
+-- 更新後的幫助模式功能
 helpModeBtn.MouseButton1Click:Connect(function()
     isHelpModeEnabled = not isHelpModeEnabled
     helpModeBtn.Text = isHelpModeEnabled and "幫助模式: 開" or "幫助模式: 關"
@@ -619,6 +641,15 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                     
                                     task.wait(0.3)
                                     break
+                                elseif helpMode == "被打後滑行" then
+                                    -- 新的滑行模式
+                                    if slideToBarrier(targetName) then
+                                        -- 等待滑行完成
+                                        while isSliding and isHelpModeEnabled do
+                                            task.wait(0.1)
+                                        end
+                                    end
+                                    break
                                 else
                                     -- 不重置模式 - 每0.5秒移動到目標玩家前方5單位
                                     isMovingLocked = true
@@ -681,13 +712,16 @@ helpModeBtn.MouseButton1Click:Connect(function()
         task.cancel(helpModeLoop)
         helpModeLoop = nil
         isMovingLocked = false -- 解除位置鎖定
+        
+        -- 停止滑行
+        if isSliding then
+            isSliding = false
+            if slideConnection then
+                slideConnection:Disconnect()
+                slideConnection = nil
+            end
+        end
     end
-end)
-
--- 修改現有的分區切換邏輯，添加屏障分區
-Section5.MouseButton1Click:Connect(function()
-    -- 直接顯示屏障分區，不需要先隱藏
-    barrierSection.Visible = true
 end)
 
 
