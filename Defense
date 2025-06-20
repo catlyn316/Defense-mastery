@@ -72,7 +72,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -80, 0, 50)
 Title.Position = UDim2.new(0, 15, 0, 0)  -- 往上移動5像素原為5
 Title.BackgroundTransparency = 1
-Title.Text = "✨ 貓玲的腳本區 ✨v0.1"
+Title.Text = "✨ 貓玲的腳本區 ✨v0.2"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -391,31 +391,12 @@ playerInputFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 playerInputFrame.BorderSizePixel = 0
 Instance.new("UICorner", playerInputFrame).CornerRadius = UDim.new(0, 6)
 
-playerInput = Instance.new("TextBox", playerInputFrame)
-playerInput.Size = UDim2.new(1, -10, 1, 0)
-playerInput.Position = UDim2.new(0, 5, 0, 0)
-playerInput.BackgroundTransparency = 1
-playerInput.Text = "輸入玩家名稱"
-playerInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-playerInput.TextSize = 12
-playerInput.Font = Enum.Font.Gotham
-playerInput.PlaceholderText = "輸入玩家名稱"
+-- 修改幫助模式變數部分
+local helpMode = "被打後重置" -- 預設模式
 
--- 創建幫助模式下拉選單
-local helpModeDropdown = Instance.new("TextButton", barrierSection)
-helpModeDropdown.Size = UDim2.new(0, 180, 0, 25)
-helpModeDropdown.Position = UDim2.new(0.5, -90, 0, 285)
-helpModeDropdown.Text = "幫助模式: " .. helpMode
-helpModeDropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-helpModeDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
-helpModeDropdown.TextSize = 14
-helpModeDropdown.Font = Enum.Font.Gotham
-helpModeDropdown.BorderSizePixel = 0
-Instance.new("UICorner", helpModeDropdown).CornerRadius = UDim.new(0, 6)
-
--- 幫助模式選項框架
+-- 修改幫助模式選項框架的大小
 local helpModeOptions = Instance.new("Frame", barrierSection)
-helpModeOptions.Size = UDim2.new(0, 180, 0, 60)
+helpModeOptions.Size = UDim2.new(0, 180, 0, 90) -- 從60改為90來容納三個選項
 helpModeOptions.Position = UDim2.new(0.5, -90, 0, 310)
 helpModeOptions.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 helpModeOptions.BorderSizePixel = 0
@@ -424,7 +405,7 @@ Instance.new("UICorner", helpModeOptions).CornerRadius = UDim.new(0, 6)
 
 -- 被打後重置選項
 local resetOption = Instance.new("TextButton", helpModeOptions)
-resetOption.Size = UDim2.new(1, 0, 0.5, 0)
+resetOption.Size = UDim2.new(1, 0, 0.33, 0) -- 從0.5改為0.33
 resetOption.Position = UDim2.new(0, 0, 0, 0)
 resetOption.Text = "被打後重置"
 resetOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
@@ -435,8 +416,8 @@ resetOption.BorderSizePixel = 0
 
 -- 被打後不重置選項
 local noResetOption = Instance.new("TextButton", helpModeOptions)
-noResetOption.Size = UDim2.new(1, 0, 0.5, 0)
-noResetOption.Position = UDim2.new(0, 0, 0.5, 0)
+noResetOption.Size = UDim2.new(1, 0, 0.33, 0) -- 從0.5改為0.33
+noResetOption.Position = UDim2.new(0, 0, 0.33, 0) -- 從0.5改為0.33
 noResetOption.Text = "被打後不重置"
 noResetOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 noResetOption.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -444,7 +425,18 @@ noResetOption.TextSize = 12
 noResetOption.Font = Enum.Font.Gotham
 noResetOption.BorderSizePixel = 0
 
--- 幫助模式下拉選單功能
+-- 新增：被打後觸碰屏障選項
+local touchBarrierOption = Instance.new("TextButton", helpModeOptions)
+touchBarrierOption.Size = UDim2.new(1, 0, 0.34, 0) -- 剩餘空間
+touchBarrierOption.Position = UDim2.new(0, 0, 0.66, 0)
+touchBarrierOption.Text = "被打後觸碰屏障"
+touchBarrierOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
+touchBarrierOption.TextColor3 = Color3.fromRGB(255, 255, 255)
+touchBarrierOption.TextSize = 12
+touchBarrierOption.Font = Enum.Font.Gotham
+touchBarrierOption.BorderSizePixel = 0
+
+-- 修改幫助模式下拉選單功能
 helpModeDropdown.MouseButton1Click:Connect(function()
     helpModeOptions.Visible = not helpModeOptions.Visible
 end)
@@ -460,6 +452,141 @@ noResetOption.MouseButton1Click:Connect(function()
     helpModeDropdown.Text = "幫助模式: " .. helpMode
     helpModeOptions.Visible = false
 end)
+
+-- 新增：被打後觸碰屏障選項點擊事件
+touchBarrierOption.MouseButton1Click:Connect(function()
+    helpMode = "被打後觸碰屏障"
+    helpModeDropdown.Text = "幫助模式: " .. helpMode
+    helpModeOptions.Visible = false
+end)
+
+-- 修改幫助模式功能中的核心邏輯
+-- 在幫助模式功能的主循環中，找到檢查LastSlappedBy的部分，修改如下：
+
+-- 檢查是否被目標玩家打中
+local lastSlappedBy = playerWorkspaceFolder:FindFirstChild("LastSlappedBy")
+if lastSlappedBy and lastSlappedBy.Value == targetName then
+    task.wait(0.5) -- 等待0.5秒
+    
+    if helpMode == "被打後重置" then
+        -- 重置模式的邏輯保持不變
+        pcall(function()
+            if humanoidRootPart and humanoidRootPart.Parent then
+                humanoidRootPart.CFrame = CFrame.new(263, 13, 197)
+            end
+        end)
+        
+        task.wait(0.2)
+        
+        -- 安全重置
+        pcall(function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid:TakeDamage(LocalPlayer.Character.Humanoid.MaxHealth)
+            end
+        end)
+        
+        -- 等待重置完成和新角色載入的邏輯...
+        local resetStartTime = tick()
+        repeat
+            task.wait(0.2)
+            if tick() - resetStartTime > 3 then
+                break
+            end
+        until not LocalPlayer.Character or LocalPlayer.Character.Humanoid.Health <= 0
+        
+        local newCharacter = nil
+        local waitStartTime = tick()
+        repeat
+            task.wait(0.2)
+            newCharacter = LocalPlayer.Character
+            if tick() - waitStartTime > 3 then
+                break
+            end
+        until newCharacter and newCharacter:FindFirstChild("HumanoidRootPart") and 
+              newCharacter:FindFirstChild("Humanoid") and newCharacter.Humanoid.Health > 0
+        
+        task.wait(0.3)
+        break
+        
+    elseif helpMode == "被打後觸碰屏障" then
+        -- 新增：被打後觸碰屏障模式
+        local barrierName = targetName .. "Barrier"
+        local targetBarrier = Workspace.dedBarrier:FindFirstChild(barrierName)
+        
+        if targetBarrier and humanoidRootPart and humanoidRootPart.Parent then
+            -- 使用BodyPosition來實現滑行效果
+            local bodyPosition = Instance.new("BodyPosition")
+            bodyPosition.MaxForce = Vector3.new(4000, 4000, 4000)
+            bodyPosition.P = 10000
+            bodyPosition.D = 500
+            bodyPosition.Position = targetBarrier.Position
+            bodyPosition.Parent = humanoidRootPart
+            
+            -- 等待觸碰到屏障
+            local connection
+            connection = humanoidRootPart.Touched:Connect(function(hit)
+                if hit == targetBarrier then
+                    connection:Disconnect()
+                    
+                    -- 移除BodyPosition
+                    if bodyPosition then
+                        bodyPosition:Destroy()
+                    end
+                    
+                    -- 回到目標面向的方向前方5單位處
+                    task.wait(0.1)
+                    pcall(function()
+                        if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            local targetRoot = targetPlayer.Character.HumanoidRootPart
+                            local targetPos = targetRoot.Position
+                            local targetLookDirection = targetRoot.CFrame.LookVector
+                            
+                            local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                            
+                            if humanoidRootPart and humanoidRootPart.Parent then
+                                humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                            end
+                        end
+                    end)
+                end
+            end)
+            
+            -- 設置超時保護，如果10秒內沒有觸碰到屏障就停止
+            task.spawn(function()
+                task.wait(10)
+                if connection then
+                    connection:Disconnect()
+                end
+                if bodyPosition then
+                    bodyPosition:Destroy()
+                end
+            end)
+        end
+        break
+        
+    else
+        -- 不重置模式的邏輯保持不變
+        isMovingLocked = true
+        
+        while isHelpModeEnabled and isMovingLocked do
+            pcall(function()
+                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local targetRoot = targetPlayer.Character.HumanoidRootPart
+                    local targetPos = targetRoot.Position
+                    local targetLookDirection = targetRoot.CFrame.LookVector
+                    
+                    local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                    
+                    if humanoidRootPart and humanoidRootPart.Parent then
+                        humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                    end
+                end
+            end)
+            task.wait(0.5)
+        end
+        break
+    end
+end
 
 -- 自動使用能力功能
 autoAbilityBtn.MouseButton1Click:Connect(function()
