@@ -72,7 +72,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -80, 0, 50)
 Title.Position = UDim2.new(0, 15, 0, 0)  -- 往上移動5像素原為5
 Title.BackgroundTransparency = 1
-Title.Text = "✨ 貓玲的腳本區 ✨v0.15"
+Title.Text = "✨ 貓玲的腳本區 ✨v0.16"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -708,61 +708,100 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                 task.wait(0.5) -- 等待0.5秒
                                 
                                 if helpMode == "被打後重置" then
-                                    -- 重置模式
-                                    pcall(function()
-                                        if humanoidRootPart and humanoidRootPart.Parent then
-                                            humanoidRootPart.CFrame = CFrame.new(263, 13, 197)
-                                        end
-                                    end)
+                                    -- 傳送到 Lobby.Teleport1
+                                    local teleport1 = Workspace.Lobby:FindFirstChild("Teleport1")
+                                    if teleport1 and isHelpModeEnabled then
+                                        humanoidRootPart.CFrame = teleport1.CFrame
+                                        task.wait(0.3)
+                                    end
                                     
-                                    task.wait(0.2)
-                                    
-                                    -- 安全重置
-                                    pcall(function()
-                                        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                                            LocalPlayer.Character.Humanoid:TakeDamage(LocalPlayer.Character.Humanoid.MaxHealth)
-                                        end
-                                    end)
-                                    
-                                    -- 等待重置完成和新角色載入
-                                    local resetStartTime = tick()
-                                    repeat
-                                        task.wait(0.2)
-                                        if tick() - resetStartTime > 3 then
-                                            break
-                                        end
-                                    until not LocalPlayer.Character or LocalPlayer.Character.Humanoid.Health <= 0
-                                    
-                                    -- 等待新角色
-                                    local newCharacter = nil
-                                    local waitStartTime = tick()
-                                    repeat
-                                        task.wait(0.2)
-                                        newCharacter = LocalPlayer.Character
-                                        if tick() - waitStartTime > 3 then
-                                            break
-                                        end
-                                    until newCharacter and newCharacter:FindFirstChild("HumanoidRootPart") and 
-                                          newCharacter:FindFirstChild("Humanoid") and newCharacter.Humanoid.Health > 0
-                                    
-                                    -- 先傳送到Teleport1
-                                    pcall(function()
-                                        local teleport1 = Workspace.Lobby.Teleport1
-                                        if teleport1 and newCharacter and newCharacter:FindFirstChild("HumanoidRootPart") then
-                                            newCharacter.HumanoidRootPart.CFrame = CFrame.new(teleport1.Position)
-                                            task.wait(0.3) -- 等待0.3
+                                    -- 持續跟隨目標玩家
+                                    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and isHelpModeEnabled then
+                                        local playerWorkspaceFolder = Workspace:FindFirstChild(LocalPlayer.Name)
+                                        local lastUpdateTime = tick()
+                                        
+                                        -- 持續移動直到檢測到LastSlappedBy
+                                        while isHelpModeEnabled and character.Parent and humanoid.Health > 0 and playerWorkspaceFolder do
                                             
-                                            -- 再傳送到目標玩家面向方向5單位處
-                                            if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                            -- 檢查是否被目標玩家打中
+                                            local lastSlappedBy = playerWorkspaceFolder:FindFirstChild("LastSlappedBy")
+                                            if lastSlappedBy and lastSlappedBy.Value == targetName then
+                                                task.wait(0.5) -- 等待0.5秒
+                                                break -- 跳出循環進行重置
+                                            end
+                                            
+                                            local currentTime = tick()
+                                            if currentTime - lastUpdateTime < 0.2 then
+                                                task.wait(0.1)
+                                                continue
+                                            end
+                                            lastUpdateTime = currentTime
+                                            
+                                            if not (targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+                                                break
+                                            end
+                                            
+                                            pcall(function()
                                                 local targetRoot = targetPlayer.Character.HumanoidRootPart
+                                                local targetPos = targetRoot.Position
                                                 local targetLookDirection = targetRoot.CFrame.LookVector
-                                                local newPos = targetRoot.Position + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-                                                newCharacter.HumanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                                                
+                                                local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                                                
+                                                if (humanoidRootPart.Position - newPos).Magnitude > 1 then
+                                                    humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                                                end
+                                            end)
+                                            
+                                            task.wait(0.1)
+                                        end
+                                        
+                                        -- 檢查LastSlappedBy並重置
+                                        if isHelpModeEnabled and playerWorkspaceFolder then
+                                            local lastSlappedBy = playerWorkspaceFolder:FindFirstChild("LastSlappedBy")
+                                            if lastSlappedBy and lastSlappedBy.Value == targetName then
+                                                
+                                                -- 安全傳送到指定坐標
+                                                pcall(function()
+                                                    if humanoidRootPart and humanoidRootPart.Parent then
+                                                        humanoidRootPart.CFrame = CFrame.new(263, 13, 197)
+                                                    end
+                                                end)
+                                                
+                                                task.wait(0.2)
+                                                
+                                                -- 安全重置
+                                                pcall(function()
+                                                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                                                        LocalPlayer.Character.Humanoid:TakeDamage(LocalPlayer.Character.Humanoid.MaxHealth)
+                                                    end
+                                                end)
+                                                
+                                                -- 等待重置完成和新角色載入
+                                                local resetStartTime = tick()
+                                                repeat
+                                                    task.wait(0.2)
+                                                    if tick() - resetStartTime > 3 then
+                                                        break
+                                                    end
+                                                until not LocalPlayer.Character or LocalPlayer.Character.Humanoid.Health <= 0
+                                                
+                                                -- 等待新角色
+                                                local newCharacter = nil
+                                                local waitStartTime = tick()
+                                                repeat
+                                                    task.wait(0.2)
+                                                    newCharacter = LocalPlayer.Character
+                                                    if tick() - waitStartTime > 3 then
+                                                        break
+                                                    end
+                                                until newCharacter and newCharacter:FindFirstChild("HumanoidRootPart") and 
+                                                      newCharacter:FindFirstChild("Humanoid") and newCharacter.Humanoid.Health > 0
+                                                
+                                                task.wait(0.3)
                                             end
                                         end
-                                    end)
-                                    
-                                    task.wait(0.3)
+                                    end
                                     break
                                 elseif helpMode == "被打後滑行" then
                                     -- 滑行模式 - 直接滑行到barrier
