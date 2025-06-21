@@ -72,7 +72,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -80, 0, 50)
 Title.Position = UDim2.new(0, 15, 0, 0)  -- 往上移動5像素原為5
 Title.BackgroundTransparency = 1
-Title.Text = "✨ 貓玲的腳本區 ✨v0.15"
+Title.Text = "✨ 貓玲的腳本區 ✨v0.16"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -483,7 +483,7 @@ autoAttackBtn.MouseButton1Click:Connect(function()
                         end
                     end
                 end
-                task.wait(0.1) -- 每0.1秒檢查一次
+                task.wait(0.5) -- 每0.5秒檢查一次
             end
         end)
     elseif autoAttackLoop then
@@ -745,37 +745,24 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                     until newCharacter and newCharacter:FindFirstChild("HumanoidRootPart") and 
                                           newCharacter:FindFirstChild("Humanoid") and newCharacter.Humanoid.Health > 0
                                     
-                                    -- ===== 新增：先碰到teleport1 =====
-                                    task.wait(0.3)
-                                    
-                                    -- 找到teleport1並移動過去
+                                    -- 先傳送到Teleport1
                                     pcall(function()
-                                        local teleport1 = Workspace:FindFirstChild("teleport1")
+                                        local teleport1 = Workspace.Lobby.Teleport1
                                         if teleport1 and newCharacter and newCharacter:FindFirstChild("HumanoidRootPart") then
-                                            local teleport1Pos = teleport1.Position
-                                            newCharacter.HumanoidRootPart.CFrame = CFrame.new(teleport1Pos + Vector3.new(0, 3, 0))
+                                            newCharacter.HumanoidRootPart.CFrame = CFrame.new(teleport1.Position)
+                                            task.wait(0.1) -- 等待0.1秒
                                             
-                                            -- 等待碰到teleport1
-                                            task.wait(0.5)
-                                            
-                                            -- 確保碰到teleport1（可能需要稍微調整位置）
-                                            newCharacter.HumanoidRootPart.CFrame = CFrame.new(teleport1Pos)
-                                            task.wait(0.3)
+                                            -- 再傳送到目標玩家面向方向5單位處
+                                            if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                                local targetRoot = targetPlayer.Character.HumanoidRootPart
+                                                local targetLookDirection = targetRoot.CFrame.LookVector
+                                                local newPos = targetRoot.Position + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                                                newCharacter.HumanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+                                            end
                                         end
                                     end)
                                     
-                                    -- 現在移動到目標玩家面前
-                                    pcall(function()
-                                        if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and 
-                                           newCharacter and newCharacter:FindFirstChild("HumanoidRootPart") then
-                                            local targetRoot = targetPlayer.Character.HumanoidRootPart
-                                            local targetLookDirection = targetRoot.CFrame.LookVector
-                                            local newPos = targetRoot.Position + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-                                            newCharacter.HumanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
-                                        end
-                                    end)
-                                    -- ===== 新增部分結束 =====
-                                    
+                                    task.wait(0.3)
                                     break
                                 elseif helpMode == "被打後滑行" then
                                     -- 滑行模式 - 直接滑行到barrier
