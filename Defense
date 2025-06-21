@@ -72,7 +72,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -80, 0, 50)
 Title.Position = UDim2.new(0, 15, 0, 0)  -- 往上移動5像素原為5
 Title.BackgroundTransparency = 1
-Title.Text = "✨ 貓玲的腳本區 ✨屏障精通v0.1"
+Title.Text = "✨ 貓玲的腳本區 ✨屏障精通"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -527,9 +527,9 @@ helpModeDropdown.Font = Enum.Font.Gotham
 helpModeDropdown.BorderSizePixel = 0
 Instance.new("UICorner", helpModeDropdown).CornerRadius = UDim.new(0, 6)
 
--- 幫助模式選項框架
+  -- 幫助模式選項框架
 local helpModeOptions = Instance.new("Frame", barrierSection)
-helpModeOptions.Size = UDim2.new(0, 180, 0, 120)
+helpModeOptions.Size = UDim2.new(0, 180, 0, 80) -- 調整高度，原本是120
 helpModeOptions.Position = UDim2.new(0.5, -90, 0, 310)
 helpModeOptions.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 helpModeOptions.BorderSizePixel = 0
@@ -538,7 +538,7 @@ Instance.new("UICorner", helpModeOptions).CornerRadius = UDim.new(0, 6)
 
 -- 被打後重置選項
 local resetOption = Instance.new("TextButton", helpModeOptions)
-resetOption.Size = UDim2.new(1, 0, 0.33, 0)
+resetOption.Size = UDim2.new(1, 0, 0.5, 0) -- 調整為0.5，原本是0.33
 resetOption.Position = UDim2.new(0, 0, 0, 0)
 resetOption.Text = "被打後重置"
 resetOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
@@ -549,8 +549,8 @@ resetOption.BorderSizePixel = 0
 
 -- 被打後不重置選項
 local noResetOption = Instance.new("TextButton", helpModeOptions)
-noResetOption.Size = UDim2.new(1, 0, 0.33, 0)
-noResetOption.Position = UDim2.new(0, 0, 0.33, 0)
+noResetOption.Size = UDim2.new(1, 0, 0.5, 0) -- 調整為0.5，原本是0.33
+noResetOption.Position = UDim2.new(0, 0, 0.5, 0) -- 調整為0.5，原本是0.33
 noResetOption.Text = "被打後不重置"
 noResetOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 noResetOption.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -558,16 +558,7 @@ noResetOption.TextSize = 12
 noResetOption.Font = Enum.Font.Gotham
 noResetOption.BorderSizePixel = 0
 
--- 被打後移動選項
-local slideOption = Instance.new("TextButton", helpModeOptions)
-slideOption.Size = UDim2.new(1, 0, 0.33, 0)
-slideOption.Position = UDim2.new(0, 0, 0.66, 0)
-slideOption.Text = "被打後移動"
-slideOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
-slideOption.TextColor3 = Color3.fromRGB(255, 255, 255)
-slideOption.TextSize = 12
-slideOption.Font = Enum.Font.Gotham
-slideOption.BorderSizePixel = 0
+-- 刪除了 slideOption 按鈕
 
 -- 幫助模式下拉選單功能
 helpModeDropdown.MouseButton1Click:Connect(function()
@@ -586,49 +577,13 @@ noResetOption.MouseButton1Click:Connect(function()
     helpModeOptions.Visible = false
 end)
 
-slideOption.MouseButton1Click:Connect(function()
-    helpMode = "被打後移動"
-    helpModeDropdown.Text = "模式: " .. helpMode
-    helpModeOptions.Visible = false
-end)
+-- 刪除了 slideOption 的點擊事件
 
--- 添加移動功能變數
-local isMovingToBarrier = false
+-- 刪除移動功能變數
+-- local isMovingToBarrier = false
 
--- 移動到barrier的函數
-local function moveToBarrier(targetName)
-    local barrierFolder = Workspace.dedBarrier:FindFirstChild(targetName .. "ÅBarrier")
-    if not barrierFolder then
-        return false
-    end
-    
-    local character = LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then
-        return false
-    end
-    
-    local humanoidRootPart = character.HumanoidRootPart
-    
-    isMovingToBarrier = true
-    
-    -- 直接移動到barrier
-    humanoidRootPart.CFrame = CFrame.new(barrierFolder.Position)
-    
-    -- 等待0.5秒
-    task.wait(0.5)
-    
-    -- 移動到目標玩家面向方向5單位處
-    local targetPlayer = Players:FindFirstChild(targetName)
-    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local targetRoot = targetPlayer.Character.HumanoidRootPart
-        local targetLookDirection = targetRoot.CFrame.LookVector
-        local newPos = targetRoot.Position + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-        humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
-    end
-    
-    isMovingToBarrier = false
-    return true
-end
+-- 刪除移動到barrier的函數
+-- local function moveToBarrier(targetName)
 
 -- 更新後的幫助模式功能
 helpModeBtn.MouseButton1Click:Connect(function()
@@ -664,13 +619,11 @@ helpModeBtn.MouseButton1Click:Connect(function()
                 end
                 
                 pcall(function()
-                    -- 傳送到 Lobby.Teleport1（被打後移動模式跳過）
-                    if helpMode ~= "被打後移動" then
-                        local teleport1 = Workspace.Lobby:FindFirstChild("Teleport1")
-                        if teleport1 and isHelpModeEnabled then
-                            humanoidRootPart.CFrame = teleport1.CFrame
-                            task.wait(0.3)
-                        end
+                    -- 傳送到 Lobby.Teleport1
+                    local teleport1 = Workspace.Lobby:FindFirstChild("Teleport1")
+                    if teleport1 and isHelpModeEnabled then
+                        humanoidRootPart.CFrame = teleport1.CFrame
+                        task.wait(0.3)
                     end
                     
                     -- 持續跟隨目標玩家
@@ -747,38 +700,6 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                     
                                     task.wait(0.3)
                                     break
-                                elseif helpMode == "被打後移動" then
-                                    -- 被打後移動模式 - 移動到barrier，然後回到目標前方並重覆循環
-                                    while isHelpModeEnabled do
-                                        -- 移動到barrier
-                                        if moveToBarrier(targetName) then
-                                            -- 等待再次被攻擊
-                                            while isHelpModeEnabled do
-                                                -- 持續移動到目標面向方向5單位
-                                                pcall(function()
-                                                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and
-                                                       character and character:FindFirstChild("HumanoidRootPart") then
-                                                        local targetRoot = targetPlayer.Character.HumanoidRootPart
-                                                        local targetLookDirection = targetRoot.CFrame.LookVector
-                                                        local newPos = targetRoot.Position + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-                                                        character.HumanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
-                                                    end
-                                                end)
-                                                
-                                                -- 檢查是否再次被攻擊
-                                                local lastSlappedBy = playerWorkspaceFolder:FindFirstChild("LastSlappedBy")
-                                                if lastSlappedBy and lastSlappedBy.Value == targetName then
-                                                    task.wait(0.5)
-                                                    break -- 跳出循環，重新移動到barrier
-                                                end
-                                                
-                                                task.wait(0.2)
-                                            end
-                                        else
-                                            break -- 找不到barrier，退出循環
-                                        end
-                                    end
-                                    break
                                 else
                                     -- 不重置模式 - 每0.5秒移動到目標玩家前方5單位
                                     isMovingLocked = true
@@ -815,27 +736,18 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                 break
                             end
                             
-                            -- 被打後移動模式會持續移動到目標前方
-                            if helpMode == "被打後移動" then
-                                pcall(function()
-                                    local targetRoot = targetPlayer.Character.HumanoidRootPart
-                                    local targetLookDirection = targetRoot.CFrame.LookVector
-                                    local newPos = targetRoot.Position + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                            -- 持續移動到目標前方
+                            pcall(function()
+                                local targetRoot = targetPlayer.Character.HumanoidRootPart
+                                local targetPos = targetRoot.Position
+                                local targetLookDirection = targetRoot.CFrame.LookVector
+                                
+                                local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                                
+                                if (humanoidRootPart.Position - newPos).Magnitude > 1 then
                                     humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
-                                end)
-                            else
-                                pcall(function()
-                                    local targetRoot = targetPlayer.Character.HumanoidRootPart
-                                    local targetPos = targetRoot.Position
-                                    local targetLookDirection = targetRoot.CFrame.LookVector
-                                    
-                                    local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-                                    
-                                    if (humanoidRootPart.Position - newPos).Magnitude > 1 then
-                                        humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
-                                    end
-                                end)
-                            end
+                                end
+                            end)
                             
                             task.wait(0.1)
                         end
@@ -851,13 +763,8 @@ helpModeBtn.MouseButton1Click:Connect(function()
         task.cancel(helpModeLoop)
         helpModeLoop = nil
         isMovingLocked = false -- 解除位置鎖定
-        
-        -- 停止移動
-        if isMovingToBarrier then
-            isMovingToBarrier = false
-        end
     end
-end)                                              
+end)                                           
 
 
 
