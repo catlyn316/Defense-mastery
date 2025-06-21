@@ -72,7 +72,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -80, 0, 50)
 Title.Position = UDim2.new(0, 15, 0, 0)  -- 往上移動5像素原為5
 Title.BackgroundTransparency = 1
-Title.Text = "✨ 貓玲的腳本區 ✨v0.16"
+Title.Text = "✨ 貓玲的腳本區 ✨v0.15"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -750,7 +750,7 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                         local teleport1 = Workspace.Lobby.Teleport1
                                         if teleport1 and newCharacter and newCharacter:FindFirstChild("HumanoidRootPart") then
                                             newCharacter.HumanoidRootPart.CFrame = CFrame.new(teleport1.Position)
-                                            task.wait(0.1) -- 等待0.1秒
+                                            task.wait(0.3) -- 等待0.3
                                             
                                             -- 再傳送到目標玩家面向方向5單位處
                                             if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
