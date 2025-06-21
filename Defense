@@ -72,7 +72,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -80, 0, 50)
 Title.Position = UDim2.new(0, 15, 0, 0)  -- 往上移動5像素原為5
 Title.BackgroundTransparency = 1
-Title.Text = "✨ 貓玲的腳本區 ✨v0.3"
+Title.Text = "✨ 貓玲的腳本區 ✨v0.4"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -375,13 +375,13 @@ customOption.MouseButton1Click:Connect(function()
     modeOptions.Visible = false
 end)
 
--- 自動使用能力按鈕功能
+-- 修复后的自动使用能力按钮功能
 autoAbilityBtn.MouseButton1Click:Connect(function()
     isBarrierEnabled = not isBarrierEnabled
     autoAbilityBtn.Text = isBarrierEnabled and "自動使用能力: 開" or "自動使用能力: 關"
     
     if isBarrierEnabled then
-        -- 記錄自訂位置模式的位置
+        -- 记录自定义位置模式的位置
         if barrierMode == "自訂位置" then
             local character = LocalPlayer.Character
             if character and character:FindFirstChild("HumanoidRootPart") then
@@ -392,7 +392,7 @@ autoAbilityBtn.MouseButton1Click:Connect(function()
         
         barrierLoop = task.spawn(function()
             while isBarrierEnabled do
-                -- 執行屏障能力
+                -- 执行屏障能力
                 pcall(function()
                     local args = {
                         [1] = 1
@@ -406,14 +406,23 @@ autoAbilityBtn.MouseButton1Click:Connect(function()
                 if not isBarrierEnabled then break end
                 
                 if barrierMode == "自訂位置" then
-                    -- 自訂位置模式：移動到按下時的位置
-                    if savedPosition then
+                    -- 自定义位置模式：移动到按下时的位置
+                    if savedPosition and savedCFrame then
                         local character = LocalPlayer.Character
                         if character and character:FindFirstChild("HumanoidRootPart") then
+                            -- 保存当前的CFrame (包括位置和朝向)
                             local currentCFrame = character.HumanoidRootPart.CFrame
-                            character.HumanoidRootPart.Position = savedPosition
                             
-                            -- 執行第二次屏障能力
+                            -- 验证保存的位置是否合理 (不在虚空中)
+                            if savedPosition.Y < -100 or savedPosition.Y > 1000 then
+                                print("警告：保存的位置可能不安全，跳过传送")
+                                continue
+                            end
+                            
+                            -- 移动到保存的位置，保持原来保存时的朝向
+                            character.HumanoidRootPart.CFrame = savedCFrame
+                            
+                            -- 执行第二次屏障能力
                             task.wait(0.1)
                             pcall(function()
                                 local args = {
@@ -422,9 +431,11 @@ autoAbilityBtn.MouseButton1Click:Connect(function()
                                 game:GetService("ReplicatedStorage").Barrier:FireServer(unpack(args))
                             end)
                             
-                            -- 等待0.1秒後回到原位置和方向
+                            -- 等待0.1秒后回到原位置
                             task.wait(0.1)
-                            if savedCFrame then
+                            -- 确保角色仍然存在且当前CFrame有效再传送回去
+                            if character.Parent and character:FindFirstChild("HumanoidRootPart") and 
+                               currentCFrame.Position.Y > -50 and currentCFrame.Position.Y < 500 then
                                 character.HumanoidRootPart.CFrame = currentCFrame
                             end
                         end
@@ -437,6 +448,9 @@ autoAbilityBtn.MouseButton1Click:Connect(function()
         barrierLoop = nil
     end
 end)
+    
+                            
+
 
 -- 創建自動攻擊按鈕
 local autoAttackBtn = createButton("自動攻擊: 關", 2, barrierSection, 50)
