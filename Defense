@@ -72,7 +72,7 @@ local Title = Instance.new("TextLabel", Frame)
 Title.Size = UDim2.new(1, -80, 0, 50)
 Title.Position = UDim2.new(0, 15, 0, 0)  -- 往上移動5像素原為5
 Title.BackgroundTransparency = 1
-Title.Text = "✨ 貓玲的腳本區 ✨v0.15"
+Title.Text = "✨ 貓玲的腳本區 ✨屏障精通"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -558,11 +558,11 @@ noResetOption.TextSize = 12
 noResetOption.Font = Enum.Font.Gotham
 noResetOption.BorderSizePixel = 0
 
--- 被打後滑行選項
+-- 被打後移動選項
 local slideOption = Instance.new("TextButton", helpModeOptions)
 slideOption.Size = UDim2.new(1, 0, 0.33, 0)
 slideOption.Position = UDim2.new(0, 0, 0.66, 0)
-slideOption.Text = "被打後滑行"
+slideOption.Text = "被打後移動"
 slideOption.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
 slideOption.TextColor3 = Color3.fromRGB(255, 255, 255)
 slideOption.TextSize = 12
@@ -587,18 +587,17 @@ noResetOption.MouseButton1Click:Connect(function()
 end)
 
 slideOption.MouseButton1Click:Connect(function()
-    helpMode = "被打後滑行"
+    helpMode = "被打後移動"
     helpModeDropdown.Text = "模式: " .. helpMode
     helpModeOptions.Visible = false
 end)
 
--- 添加滑行功能變數
-local isSliding = false
-local slideConnection = nil
+-- 添加移動功能變數
+local isMovingToBarrier = false
 
--- 滑行到barrier的函數
-local function slideToBarrier(targetName)
-    local barrierFolder = Workspace.dedBarrier:FindFirstChild(targetName .. "Barrier")
+-- 移動到barrier的函數
+local function moveToBarrier(targetName)
+    local barrierFolder = Workspace.dedBarrier:FindFirstChild(targetName .. "ÅBarrier")
     if not barrierFolder then
         return false
     end
@@ -609,53 +608,25 @@ local function slideToBarrier(targetName)
     end
     
     local humanoidRootPart = character.HumanoidRootPart
-    local startPos = humanoidRootPart.Position
-    local targetPos = barrierFolder.Position
     
-    isSliding = true
-    local startTime = tick()
-    local slideSpeed = 50 -- 滑行速度
-    local totalDistance = (targetPos - startPos).Magnitude
-    local slideTime = totalDistance / slideSpeed
+    isMovingToBarrier = true
     
-    slideConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        if not isSliding or not character.Parent or not humanoidRootPart.Parent then
-            if slideConnection then
-                slideConnection:Disconnect()
-                slideConnection = nil
-            end
-            isSliding = false
-            return
-        end
-        
-        local elapsed = tick() - startTime
-        local progress = math.min(elapsed / slideTime, 1)
-        
-        -- 計算當前位置
-        local currentPos = startPos:Lerp(targetPos, progress)
-        humanoidRootPart.CFrame = CFrame.new(currentPos, targetPos)
-        
-        -- 檢查是否碰到barrier或滑行完成
-        local distance = (humanoidRootPart.Position - targetPos).Magnitude
-        if distance < 5 or progress >= 1 then
-            -- 停止滑行
-            isSliding = false
-            if slideConnection then
-                slideConnection:Disconnect()
-                slideConnection = nil
-            end
-            
-            -- 回到目標玩家面向方向5單位處
-            local targetPlayer = Players:FindFirstChild(targetName)
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local targetRoot = targetPlayer.Character.HumanoidRootPart
-                local targetLookDirection = targetRoot.CFrame.LookVector
-                local newPos = targetRoot.Position + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
-                humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
-            end
-        end
-    end)
+    -- 直接移動到barrier
+    humanoidRootPart.CFrame = CFrame.new(barrierFolder.Position)
     
+    -- 等待0.5秒
+    task.wait(0.5)
+    
+    -- 移動到目標玩家面向方向5單位處
+    local targetPlayer = Players:FindFirstChild(targetName)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local targetRoot = targetPlayer.Character.HumanoidRootPart
+        local targetLookDirection = targetRoot.CFrame.LookVector
+        local newPos = targetRoot.Position + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+        humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
+    end
+    
+    isMovingToBarrier = false
     return true
 end
 
@@ -774,14 +745,9 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                     
                                     task.wait(0.3)
                                     break
-                                elseif helpMode == "被打後滑行" then
-                                    -- 滑行模式 - 直接滑行到barrier
-                                    if slideToBarrier(targetName) then
-                                        -- 等待滑行完成
-                                        while isSliding and isHelpModeEnabled do
-                                            task.wait(0.1)
-                                        end
-                                    end
+                                elseif helpMode == "被打後移動" then
+                                    -- 移動模式 - 移動到barrier，等待0.5秒後移動到目標前方
+                                    moveToBarrier(targetName)
                                     break
                                 else
                                     -- 不重置模式 - 每0.5秒移動到目標玩家前方5單位
@@ -846,16 +812,12 @@ helpModeBtn.MouseButton1Click:Connect(function()
         helpModeLoop = nil
         isMovingLocked = false -- 解除位置鎖定
         
-        -- 停止滑行
-        if isSliding then
-            isSliding = false
-            if slideConnection then
-                slideConnection:Disconnect()
-                slideConnection = nil
-            end
+        -- 停止移動
+        if isMovingToBarrier then
+            isMovingToBarrier = false
         end
     end
-end)                                                
+end)                                               
 
 
 
