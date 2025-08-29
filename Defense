@@ -742,7 +742,7 @@ helpModeBtn.MouseButton1Click:Connect(function()
                                 local targetPos = targetRoot.Position
                                 local targetLookDirection = targetRoot.CFrame.LookVector
                                 
-                                local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 2, 0)
+                                local newPos = targetPos + (targetLookDirection * 5) + Vector3.new(0, 0, 0)
                                 
                                 if (humanoidRootPart.Position - newPos).Magnitude > 1 then
                                     humanoidRootPart.CFrame = CFrame.new(newPos, newPos + targetLookDirection)
